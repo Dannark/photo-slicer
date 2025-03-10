@@ -3,6 +3,7 @@ import { Canvas, useThree } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import * as THREE from 'three';
 import { STLExporter } from 'three-stdlib';
+import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils';
 import { LayerConfig } from './HeightControls';
 
 // Constantes de dimensão
@@ -81,6 +82,7 @@ const HeightMap = React.forwardRef<HeightMapRef, {
   }, [baseHeight, layers]);
 
   const createGeometryWithHeight = () => {
+    // Cria a geometria inicial
     const geometry = new THREE.PlaneGeometry(MODEL_WIDTH, MODEL_HEIGHT, RESOLUTION - 1, RESOLUTION - 1);
     const canvas = document.createElement('canvas');
     canvas.width = texture.image.width;
@@ -95,22 +97,118 @@ const HeightMap = React.forwardRef<HeightMapRef, {
 
     // Atualiza os vértices com base na altura
     const positions = geometry.attributes.position.array;
+    const baseThickness = 0.8; // Espessura da base em mm
+
+    // Mapeia as coordenadas x e y únicas para encontrar os vértices mais externos
+    const uniqueX = new Set<number>();
+    const uniqueY = new Set<number>();
+    
     for (let i = 0; i < positions.length; i += 3) {
-      const x = (positions[i] + MODEL_WIDTH/2) / MODEL_WIDTH; // Normaliza para 0,1
-      const y = (positions[i + 1] + MODEL_HEIGHT/2) / MODEL_HEIGHT;
-
-      // Encontra o pixel correspondente na imagem
-      const pixelX = Math.floor(x * (canvas.width - 1));
-      const pixelY = Math.floor(y * (canvas.height - 1));
-      const pixelIndex = (pixelY * canvas.width + pixelX) * 4;
-
-      // Usa a média RGB como altura (convertendo para escala de cinza)
-      const height = (pixels[pixelIndex] + pixels[pixelIndex + 1] + pixels[pixelIndex + 2]) / (3 * 255) * baseHeight;
-      positions[i + 2] = height;
+      uniqueX.add(positions[i]);
+      uniqueY.add(positions[i + 1]);
     }
 
-    geometry.computeVertexNormals();
-    return geometry;
+    const sortedX = Array.from(uniqueX).sort((a, b) => a - b);
+    const sortedY = Array.from(uniqueY).sort((a, b) => a - b);
+    const minX = sortedX[0];
+    const maxX = sortedX[sortedX.length - 1];
+    const minY = sortedY[0];
+    const maxY = sortedY[sortedY.length - 1];
+
+    // Arrays para armazenar os vértices das bordas por lado
+    const leftEdge: number[] = [];
+    const rightEdge: number[] = [];
+    const topEdge: number[] = [];
+    const bottomEdge: number[] = [];
+    
+    // Primeiro, vamos mapear todos os vértices e suas alturas
+    for (let i = 0; i < positions.length / 3; i++) {
+      const idx = i * 3;
+      const x = positions[idx];
+      const y = positions[idx + 1];
+
+      const pixelX = Math.floor((x + MODEL_WIDTH/2) / MODEL_WIDTH * (canvas.width - 1));
+      const pixelY = Math.floor((y + MODEL_HEIGHT/2) / MODEL_HEIGHT * (canvas.width - 1));
+      const pixelIndex = (pixelY * canvas.width + pixelX) * 4;
+
+      const height = (pixels[pixelIndex] + pixels[pixelIndex + 1] + pixels[pixelIndex + 2]) / (3 * 255) * baseHeight;
+      positions[idx + 2] = height;
+
+      // Classifica os vértices das bordas usando comparação exata
+      if (x === minX) leftEdge.push(i);
+      if (x === maxX) rightEdge.push(i);
+      if (y === minY) bottomEdge.push(i);
+      if (y === maxY) topEdge.push(i);
+    }
+
+    // Ordena as bordas por coordenada para garantir continuidade
+    leftEdge.sort((a, b) => positions[a * 3 + 1] - positions[b * 3 + 1]);
+    rightEdge.sort((a, b) => positions[a * 3 + 1] - positions[b * 3 + 1]);
+    topEdge.sort((a, b) => positions[a * 3] - positions[b * 3]);
+    bottomEdge.sort((a, b) => positions[a * 3] - positions[b * 3]);
+
+    // Cria novos vértices e faces
+    const newPositions: number[] = [];
+    const newIndices: number[] = [];
+    const existingIndices = Array.from(geometry.index?.array || []);
+
+    // Copia os vértices originais
+    for (let i = 0; i < positions.length; i++) {
+      newPositions.push(positions[i]);
+    }
+    const originalVertexCount = positions.length / 3;
+
+    // Função auxiliar para criar faces da parede
+    const createWallFaces = (edge: number[]) => {
+      const wallVertices: number[] = [];
+      
+      // Cria vértices extrudados para cada vértice da borda
+      edge.forEach(vertexIndex => {
+        const baseIndex = vertexIndex * 3;
+        newPositions.push(
+          positions[baseIndex],
+          positions[baseIndex + 1],
+          -baseThickness
+        );
+        wallVertices.push(newPositions.length / 3 - 1);
+      });
+
+      // Cria faces entre vértices adjacentes
+      for (let i = 0; i < edge.length - 1; i++) {
+        const topLeft = edge[i];
+        const topRight = edge[i + 1];
+        const bottomLeft = wallVertices[i];
+        const bottomRight = wallVertices[i + 1];
+
+        // Primeira face do quad
+        newIndices.push(
+          topLeft,
+          topRight,
+          bottomLeft
+        );
+
+        // Segunda face do quad
+        newIndices.push(
+          topRight,
+          bottomRight,
+          bottomLeft
+        );
+      }
+    };
+
+    // Cria as paredes para cada borda
+    createWallFaces(leftEdge);
+    createWallFaces(rightEdge);
+    createWallFaces(topEdge);
+    createWallFaces(bottomEdge);
+
+    // Atualiza a geometria com os novos vértices e faces
+    const finalGeometry = new THREE.BufferGeometry();
+    finalGeometry.setAttribute('position', new THREE.Float32BufferAttribute(newPositions, 3));
+    finalGeometry.setIndex([...existingIndices, ...newIndices]);
+    finalGeometry.computeVertexNormals();
+
+    return finalGeometry;
   };
 
   const exportToSTL = () => {
@@ -119,7 +217,7 @@ const HeightMap = React.forwardRef<HeightMapRef, {
 
     const exportMesh = new THREE.Mesh(
       exportGeometry,
-      new THREE.MeshStandardMaterial()
+      new THREE.MeshStandardMaterial({ side: THREE.DoubleSide })
     );
     exportMesh.rotation.x = -Math.PI / 2;
 
