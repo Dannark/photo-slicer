@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useRef } from 'react';
 
 interface ImageUploaderProps {
   onImageUpload: (file: File) => void;
@@ -7,6 +7,7 @@ interface ImageUploaderProps {
 
 const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageUpload, imageLoaded }) => {
   const [isDragging, setIsDragging] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFile = (file: File) => {
     if (file && file.type.startsWith('image/')) {
@@ -61,6 +62,10 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageUpload, imageLoade
     }
   };
 
+  const handleButtonClick = () => {
+    fileInputRef.current?.click();
+  };
+
   if (imageLoaded) {
     return null;
   }
@@ -74,13 +79,14 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageUpload, imageLoade
       onDragLeave={handleDragLeave}
     >
       <input
+        ref={fileInputRef}
         type="file"
         accept="image/*"
         onChange={handleImageUpload}
-        className="file-input"
+        style={{ display: 'none' }}
       />
       <div className="upload-content">
-        <button className="upload-button">Escolher arquivo</button>
+        <button className="upload-button" onClick={handleButtonClick}>Escolher arquivo</button>
         <p>ou arraste e solte uma imagem aqui</p>
       </div>
     </div>

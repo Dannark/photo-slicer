@@ -29,7 +29,7 @@ const HeightMap = React.forwardRef<HeightMapRef, {
   layers: LayerConfig[];
   resolution: number;
   isSteppedMode: boolean;
-  layerHeight: number; // Nova prop para altura da camada
+  layerHeight: number;
 }>(({ texture, baseHeight, baseThickness, layers, resolution, isSteppedMode, layerHeight }, ref) => {
   const meshRef = useRef<THREE.Mesh>(null);
   const materialRef = useRef<THREE.ShaderMaterial>(null);
@@ -41,11 +41,9 @@ const HeightMap = React.forwardRef<HeightMapRef, {
     let modelWidth, modelHeight;
 
     if (aspectRatio > 1) {
-      // Imagem mais larga que alta
       modelWidth = MODEL_MAX_SIZE;
       modelHeight = MODEL_MAX_SIZE / aspectRatio;
     } else {
-      // Imagem mais alta que larga
       modelHeight = MODEL_MAX_SIZE;
       modelWidth = MODEL_MAX_SIZE * aspectRatio;
     }
@@ -53,77 +51,110 @@ const HeightMap = React.forwardRef<HeightMapRef, {
     return { width: modelWidth, height: modelHeight };
   };
 
-  // Calcula as dimensões uma vez e reutiliza
   const dimensions = calculateDimensions(texture.image.width, texture.image.height);
 
-  // Shader personalizado para aplicar as cores baseado na altura
-  const shader = {
-    uniforms: {
-      heightMap: { value: texture },
-      baseHeight: { value: baseHeight },
-      layerColors: { value: layers.map(l => new THREE.Color(l.color)) },
-      layerHeights: { value: layers.map(l => l.heightPercentage / 100) },
-      isSteppedMode: { value: isSteppedMode },
-      layerHeight: { value: layerHeight }, // Novo uniform
-    },
-    vertexShader: `
-      uniform sampler2D heightMap;
-      uniform float baseHeight;
-      uniform float layerHeights[4];
-      uniform bool isSteppedMode;
-      uniform float layerHeight;
-      varying float vHeight;
-      
-      float getSteppedHeight(float height) {
-        // Calcula quantas camadas completas cabem nesta altura
-        float numLayers = floor(height / layerHeight);
-        return numLayers * layerHeight;
-      }
-      
-      void main() {
-        vec4 heightColor = texture2D(heightMap, uv);
-        float height = heightColor.r * baseHeight;
-        
-        if (isSteppedMode) {
-          height = getSteppedHeight(height);
-        }
-        
-        vHeight = height / baseHeight;
-        
-        vec3 pos = position;
-        pos.z += height;
-        
-        gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
-      }
-    `,
-    fragmentShader: `
-      uniform vec3 layerColors[4];
-      uniform float layerHeights[4];
-      varying float vHeight;
-      
-      void main() {
-        vec3 color = layerColors[0];
-        
-        for(int i = 1; i < 4; i++) {
-          if(vHeight > layerHeights[i-1]) {
-            color = layerColors[i];
-          }
-        }
-        
-        gl_FragColor = vec4(color, 1.0);
-      }
-    `
-  };
+  useEffect(() => {
+    if (meshRef.current && !materialRef.current) {
+      const initialColors = Array(5).fill(null).map(() => new THREE.Color(0x000000));
+      const initialHeights = Array(5).fill(1.0);
 
+      layers.forEach((layer, index) => {
+        initialColors[index].set(layer.color);
+        initialHeights[index] = layer.heightPercentage / 100;
+      });
+
+      const material = new THREE.ShaderMaterial({
+        uniforms: {
+          heightMap: { value: texture },
+          baseHeight: { value: baseHeight },
+          layerColors: { value: initialColors },
+          layerHeights: { value: initialHeights },
+          isSteppedMode: { value: isSteppedMode },
+          layerHeight: { value: layerHeight },
+          numLayers: { value: layers.length }
+        },
+        vertexShader: `
+          uniform sampler2D heightMap;
+          uniform float baseHeight;
+          uniform float layerHeights[5];
+          uniform bool isSteppedMode;
+          uniform float layerHeight;
+          varying float vHeight;
+          
+          float getSteppedHeight(float height) {
+            float numLayers = floor(height / layerHeight);
+            return numLayers * layerHeight;
+          }
+          
+          void main() {
+            vec4 heightColor = texture2D(heightMap, uv);
+            float height = heightColor.r * baseHeight;
+            
+            if (isSteppedMode) {
+              height = getSteppedHeight(height);
+            }
+            
+            vHeight = height / baseHeight;
+            
+            vec3 pos = position;
+            pos.z += height;
+            
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
+          }
+        `,
+        fragmentShader: `
+          uniform vec3 layerColors[5];
+          uniform float layerHeights[5];
+          uniform int numLayers;
+          varying float vHeight;
+          
+          void main() {
+            vec3 color = layerColors[0];
+            
+            for(int i = 1; i < 5; i++) {
+              if(i < numLayers && vHeight > layerHeights[i-1]) {
+                color = layerColors[i];
+              }
+            }
+            
+            gl_FragColor = vec4(color, 1.0);
+          }
+        `
+      });
+
+      materialRef.current = material;
+      meshRef.current.material = material;
+    }
+  }, [meshRef.current]);
+
+  // Atualiza os uniforms quando necessário
   useEffect(() => {
     if (materialRef.current) {
-      materialRef.current.uniforms.baseHeight.value = baseHeight;
-      materialRef.current.uniforms.layerColors.value = layers.map(l => new THREE.Color(l.color));
-      materialRef.current.uniforms.layerHeights.value = layers.map(l => l.heightPercentage / 100);
-      materialRef.current.uniforms.isSteppedMode.value = isSteppedMode;
-      materialRef.current.uniforms.layerHeight.value = layerHeight;
+      try {
+
+        const colors = Array(5).fill(null).map(() => new THREE.Color(0x000000));
+        const heights = Array(5).fill(1.0);
+
+        layers.forEach((layer, index) => {
+          colors[index].set(layer.color);
+          heights[index] = layer.heightPercentage / 100;
+        });
+
+
+        materialRef.current.uniforms.heightMap.value = texture;
+        materialRef.current.uniforms.baseHeight.value = baseHeight;
+        materialRef.current.uniforms.layerColors.value = colors;
+        materialRef.current.uniforms.layerHeights.value = heights;
+        materialRef.current.uniforms.isSteppedMode.value = isSteppedMode;
+        materialRef.current.uniforms.layerHeight.value = layerHeight;
+        materialRef.current.uniforms.numLayers.value = layers.length;
+        materialRef.current.needsUpdate = true;
+
+      } catch (error) {
+        console.error('Erro ao atualizar uniforms:', error);
+      }
     }
-  }, [baseHeight, layers, isSteppedMode, layerHeight]);
+  }, [baseHeight, layers, isSteppedMode, layerHeight, texture]);
 
   const createGeometryWithHeight = () => {
     // Calcula as dimensões baseadas na proporção da imagem
@@ -371,7 +402,6 @@ const HeightMap = React.forwardRef<HeightMapRef, {
   return (
     <mesh ref={meshRef} rotation={[-Math.PI / 2, 0, 0]}>
       <planeGeometry args={[dimensions.width, dimensions.height, Math.floor(resolution * (dimensions.width / MODEL_MAX_SIZE)) - 1, Math.floor(resolution * (dimensions.height / MODEL_MAX_SIZE)) - 1]} />
-      <shaderMaterial ref={materialRef} args={[shader]} />
     </mesh>
   );
 });

@@ -21,6 +21,8 @@ const LayerColorSlider: React.FC<LayerColorSliderProps> = ({
   const [hoveredY, setHoveredY] = useState<number | null>(null);
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [originalPositions, setOriginalPositions] = useState<number[] | null>(null);
+  const [selectedDividerIndex, setSelectedDividerIndex] = useState<number | null>(null);
+  const [isOverDivider, setIsOverDivider] = useState(false);
 
   // Constantes
   const CANVAS_HEIGHT = 400;
@@ -90,8 +92,9 @@ const LayerColorSlider: React.FC<LayerColorSliderProps> = ({
       ctx.lineWidth = 1;
       ctx.strokeRect(10, currentY, CANVAS_WIDTH - 40, sectionHeight);
 
-      // Desenha o botão de remover (se não for a última camada e houver mais de uma camada)
-      if (layers.length > 1 && index < layers.length - 1) {
+      // Desenha o botão de remover apenas se o mouse estiver sobre esta seção
+      if (layers.length > 1 && hoveredY !== null && 
+          hoveredY >= currentY && hoveredY <= currentY + sectionHeight) {
         const buttonX = CANVAS_WIDTH - 20;
         const buttonY = currentY + sectionHeight / 2;
         
@@ -112,6 +115,29 @@ const LayerColorSlider: React.FC<LayerColorSliderProps> = ({
         const dividerY = currentY + sectionHeight;
         ctx.fillStyle = isDragging === index ? 'rgba(97, 218, 251, 0.3)' : 'rgba(255, 255, 255, 0.1)';
         ctx.fillRect(10, dividerY - DRAG_HANDLE_HEIGHT/2, CANVAS_WIDTH - 40, DRAG_HANDLE_HEIGHT);
+
+        // Verifica se é possível adicionar uma cor nesta divisória
+        const currentLayerCount = Math.floor((layers[index].heightPercentage / 100) * totalLayers);
+        const nextLayerCount = Math.floor((layers[index + 1].heightPercentage / 100) * totalLayers) - 
+                             Math.floor((layers[index].heightPercentage / 100) * totalLayers);
+
+        if ((currentLayerCount > 1 || nextLayerCount > 1) && 
+            hoveredY !== null && 
+            Math.abs(hoveredY - dividerY) <= DRAG_HANDLE_HEIGHT/2) {
+          // Desenha o botão de adicionar na divisória
+          const buttonX = CANVAS_WIDTH - 20;
+          
+          ctx.beginPath();
+          ctx.arc(buttonX, dividerY, BUTTON_RADIUS, 0, Math.PI * 2);
+          ctx.fillStyle = '#4CAF50';
+          ctx.fill();
+          
+          ctx.fillStyle = '#fff';
+          ctx.font = 'bold 14px Arial';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText('+', buttonX, dividerY);
+        }
       }
 
       // Desenha o tooltip se o mouse estiver sobre esta seção
@@ -123,11 +149,9 @@ const LayerColorSlider: React.FC<LayerColorSliderProps> = ({
         ctx.font = '12px Arial';
         const tooltipWidth = ctx.measureText(tooltipText).width + 20;
         
-        // Desenha o fundo do tooltip
         ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
         ctx.fillRect(10, hoveredY - 20, tooltipWidth, 20);
         
-        // Desenha o texto do tooltip
         ctx.fillStyle = '#fff';
         ctx.textAlign = 'left';
         ctx.textBaseline = 'middle';
@@ -137,19 +161,6 @@ const LayerColorSlider: React.FC<LayerColorSliderProps> = ({
       currentY += sectionHeight;
       accumulatedLayers = nextAccumulatedLayers;
     });
-
-    // Desenha o botão de adicionar no topo
-    if (layers.length < 5) {
-      ctx.beginPath();
-      ctx.arc(CANVAS_WIDTH - 20, 15, BUTTON_RADIUS, 0, Math.PI * 2);
-      ctx.fillStyle = '#4CAF50';
-      ctx.fill();
-      ctx.fillStyle = '#fff';
-      ctx.font = 'bold 14px Arial';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText('+', CANVAS_WIDTH - 20, 15);
-    }
   };
 
   useEffect(() => {
@@ -177,6 +188,13 @@ const LayerColorSlider: React.FC<LayerColorSliderProps> = ({
   const handleMouseMove = (e: React.MouseEvent) => {
     const { x, y } = getCanvasCoordinates(e);
     setHoveredY(y);
+
+    // Verifica se o mouse está sobre alguma divisória
+    const dividerPositions = getDividerPositions();
+    const isOverAnyDivider = dividerPositions.some(pos => 
+      Math.abs(y - pos) <= DRAG_HANDLE_HEIGHT/2
+    );
+    setIsOverDivider(isOverAnyDivider);
 
     if (isDragging !== null && isDragging < layers.length - 1 && originalPositions !== null) {
       const newLayers = [...layers];
@@ -212,30 +230,60 @@ const LayerColorSlider: React.FC<LayerColorSliderProps> = ({
   const handleMouseDown = (e: React.MouseEvent) => {
     const { x, y } = getCanvasCoordinates(e);
 
-    // Verifica se clicou no botão de adicionar
-    if (y <= 30 && Math.hypot(x - (CANVAS_WIDTH - 20), y - 15) <= BUTTON_RADIUS) {
-      setShowColorPicker(true);
-      return;
-    }
-
     // Verifica se clicou em um botão de remover
     let currentY = SLIDER_START_Y;
     let accumulatedLayers = 0;
 
-    for (let i = 0; i < layers.length - 1; i++) {
-      const nextAccumulatedLayers = Math.floor((layers[i].heightPercentage / 100) * totalLayers);
+    for (let i = 0; i < layers.length; i++) {
+      const nextAccumulatedLayers = i < layers.length - 1 
+        ? Math.floor((layers[i].heightPercentage / 100) * totalLayers)
+        : totalLayers;
       const sectionHeight = (nextAccumulatedLayers - accumulatedLayers) * layerPixelHeight;
       const buttonY = currentY + sectionHeight / 2;
 
-      if (Math.hypot(x - (CANVAS_WIDTH - 20), y - buttonY) <= BUTTON_RADIUS) {
+      // Verifica se clicou no botão de remover (apenas se o mouse estiver sobre a seção)
+      if (hoveredY !== null && 
+          hoveredY >= currentY && 
+          hoveredY <= currentY + sectionHeight &&
+          Math.hypot(x - (CANVAS_WIDTH - 20), y - buttonY) <= BUTTON_RADIUS) {
         if (layers.length > 1) {
-          const newLayers = layers.filter((_, index) => index !== i);
-          if (newLayers.length > 0) {
-            newLayers[newLayers.length - 1].heightPercentage = 100;
+          const newLayers = [...layers];
+          newLayers.splice(i, 1);
+          
+          if (i === 0 && newLayers.length > 0) {
+            const scale = 100 / newLayers[newLayers.length - 1].heightPercentage;
+            newLayers.forEach(layer => {
+              layer.heightPercentage *= scale;
+            });
+          } else {
+            const prevPercentage = i > 0 ? layers[i - 1].heightPercentage : 0;
+            const removedRange = layers[i].heightPercentage - prevPercentage;
+            
+            for (let j = i; j < newLayers.length; j++) {
+              newLayers[j].heightPercentage -= removedRange;
+            }
           }
+          
+          newLayers[newLayers.length - 1].heightPercentage = 100;
           onChange(newLayers);
         }
         return;
+      }
+
+      // Verifica se clicou no botão de adicionar na divisória
+      if (i < layers.length - 1) {
+        const dividerY = currentY + sectionHeight;
+        const currentLayerCount = Math.floor((layers[i].heightPercentage / 100) * totalLayers);
+        const nextLayerCount = Math.floor((layers[i + 1].heightPercentage / 100) * totalLayers) - 
+                             Math.floor((layers[i].heightPercentage / 100) * totalLayers);
+
+        if ((currentLayerCount > 1 || nextLayerCount > 1) && 
+            Math.abs(y - dividerY) <= DRAG_HANDLE_HEIGHT/2 &&
+            Math.hypot(x - (CANVAS_WIDTH - 20), y - dividerY) <= BUTTON_RADIUS) {
+          setSelectedDividerIndex(i);
+          setShowColorPicker(true);
+          return;
+        }
       }
 
       currentY += sectionHeight;
@@ -249,7 +297,6 @@ const LayerColorSlider: React.FC<LayerColorSliderProps> = ({
     );
 
     if (dividerIndex !== -1) {
-      // Salva as posições originais de todas as cores após a que está sendo arrastada
       const positions = layers.map(layer => layer.heightPercentage);
       setOriginalPositions(positions);
       setIsDragging(dividerIndex);
@@ -262,19 +309,46 @@ const LayerColorSlider: React.FC<LayerColorSliderProps> = ({
   };
 
   const handleColorSelect = (color: string) => {
-    if (layers.length < 5) {
-      const defaultLayerSize = Math.floor(totalLayers / (layers.length + 1));
-      const percentage = (defaultLayerSize / totalLayers) * 100;
-      
+    if (selectedDividerIndex !== null) {
       const newLayers = [...layers];
-      newLayers[newLayers.length - 1].heightPercentage = percentage;
-      newLayers.push({
+      const currentIndex = selectedDividerIndex;
+      
+      // Calcula o número de camadas disponíveis
+      const currentLayerCount = Math.floor((layers[currentIndex].heightPercentage / 100) * totalLayers);
+      const nextLayerCount = Math.floor((layers[currentIndex + 1].heightPercentage / 100) * totalLayers) - 
+                           Math.floor((layers[currentIndex].heightPercentage / 100) * totalLayers);
+      
+      // Decide de qual cor "pegar" uma camada
+      let sourceIndex = currentLayerCount > 1 ? currentIndex : currentIndex + 1;
+      
+      // Calcula a nova porcentagem para uma camada
+      const oneLayerPercentage = (1 / totalLayers) * 100;
+      
+      // Ajusta as porcentagens
+      if (sourceIndex === currentIndex) {
+        // Reduz uma camada da cor atual
+        newLayers[currentIndex].heightPercentage -= oneLayerPercentage;
+      } else {
+        // Reduz uma camada da próxima cor
+        const currentEndPercentage = layers[currentIndex].heightPercentage;
+        newLayers[currentIndex + 1].heightPercentage -= oneLayerPercentage;
+        
+        // Ajusta as porcentagens das cores subsequentes
+        for (let i = currentIndex + 2; i < newLayers.length; i++) {
+          newLayers[i].heightPercentage -= oneLayerPercentage;
+        }
+      }
+      
+      // Insere a nova cor
+      newLayers.splice(currentIndex + 1, 0, {
         color,
-        heightPercentage: 100
+        heightPercentage: layers[currentIndex].heightPercentage + oneLayerPercentage
       });
+      
       onChange(newLayers);
     }
     setShowColorPicker(false);
+    setSelectedDividerIndex(null);
   };
 
   return (
@@ -284,9 +358,12 @@ const LayerColorSlider: React.FC<LayerColorSliderProps> = ({
         onMouseMove={handleMouseMove}
         onMouseDown={handleMouseDown}
         onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseUp}
+        onMouseLeave={(e) => {
+          handleMouseUp();
+          setIsOverDivider(false);
+        }}
         style={{ 
-          cursor: isDragging !== null ? 'ns-resize' : 'default',
+          cursor: isDragging !== null || isOverDivider ? 'ns-resize' : 'default',
           width: '200px',
           height: '400px'
         }}
