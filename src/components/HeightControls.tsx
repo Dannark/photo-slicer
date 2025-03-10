@@ -10,56 +10,79 @@ interface HeightControlsProps {
   onBaseHeightChange: (height: number) => void;
   baseThickness: number;
   onBaseThicknessChange: (thickness: number) => void;
+  layerHeight: number;
+  onLayerHeightChange: (height: number) => void;
   layers: LayerConfig[];
   onLayersChange: (layers: LayerConfig[]) => void;
 }
-
-const DEFAULT_LAYER_HEIGHT = 0.08; // mm por camada
-const DEFAULT_BASE_THICKNESS = 0.16; // 2 camadas de base por padrão
 
 const HeightControls: React.FC<HeightControlsProps> = ({
   baseHeight,
   onBaseHeightChange,
   baseThickness,
   onBaseThicknessChange,
+  layerHeight,
+  onLayerHeightChange,
   layers,
   onLayersChange,
 }) => {
   // Calcula o número total de camadas incluindo a base
-  const totalLayers = Math.floor((baseHeight + baseThickness) / DEFAULT_LAYER_HEIGHT);
-  const baseLayerCount = Math.floor(baseThickness / DEFAULT_LAYER_HEIGHT);
+  const totalLayers = Math.floor((baseHeight + baseThickness) / layerHeight);
+  const baseLayerCount = Math.floor(baseThickness / layerHeight);
 
   const handleBaseThicknessChange = (value: number) => {
     // Garante que a espessura da base seja múltiplo da altura da camada
-    const normalizedThickness = Math.round(value / DEFAULT_LAYER_HEIGHT) * DEFAULT_LAYER_HEIGHT;
+    const normalizedThickness = Math.round(value / layerHeight) * layerHeight;
     onBaseThicknessChange(normalizedThickness);
+  };
+
+  const handleLayerHeightChange = (value: number) => {
+    // Garante um valor mínimo para a altura da camada
+    const newLayerHeight = Math.max(0.04, value);
+    onLayerHeightChange(newLayerHeight);
+    
+    // Ajusta a espessura da base para ser múltiplo da nova altura da camada
+    const newBaseThickness = Math.round(baseThickness / newLayerHeight) * newLayerHeight;
+    onBaseThicknessChange(newBaseThickness);
   };
 
   return (
     <div className="height-controls">
       <div className="controls-group">
         <div className="control-item">
-          <label>Altura Total (mm):</label>
+          <label>Altura da Camada (mm):</label>
           <input
             type="number"
-            min="0.08"
-            step="0.08"
-            value={baseHeight}
-            onChange={(e) => onBaseHeightChange(Number(e.target.value))}
+            min="0.04"
+            step="0.04"
+            value={layerHeight}
+            onChange={(e) => handleLayerHeightChange(Number(e.target.value))}
           />
-          <span>Total de Camadas: {totalLayers}</span>
+          <span>Altura mínima: 0.04mm</span>
         </div>
 
         <div className="control-item">
           <label>Espessura da Base (mm):</label>
           <input
             type="number"
-            min={DEFAULT_LAYER_HEIGHT}
-            step={DEFAULT_LAYER_HEIGHT}
+            min={layerHeight}
+            step={layerHeight}
             value={baseThickness}
             onChange={(e) => handleBaseThicknessChange(Number(e.target.value))}
           />
           <span>Camadas da Base: {baseLayerCount}</span>
+        </div>
+
+        <div className="control-item">
+          <label>Altura Total (mm):</label>
+          <input
+            type="number"
+            min={layerHeight}
+            step={layerHeight}
+            value={baseHeight}
+            onChange={(e) => onBaseHeightChange(Number(e.target.value))}
+          />
+          <span>Total de Camadas: {totalLayers}</span>
         </div>
       </div>
       

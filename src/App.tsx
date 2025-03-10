@@ -4,11 +4,13 @@ import ImageUploader from './components/ImageUploader';
 import ThreeViewer from './components/ThreeViewer';
 import HeightControls, { LayerConfig } from './components/HeightControls';
 
+const DEFAULT_LAYER_HEIGHT = 0.08; // mm por camada
 const DEFAULT_BASE_THICKNESS = 0.16; // 2 camadas de base por padrão
 
 function App() {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [baseHeight, setBaseHeight] = useState(2);
+  const [layerHeight, setLayerHeight] = useState(DEFAULT_LAYER_HEIGHT);
   const [baseThickness, setBaseThickness] = useState(DEFAULT_BASE_THICKNESS);
   const [layers, setLayers] = useState<LayerConfig[]>([
     { color: '#000000', heightPercentage: 10 },   // Preto
@@ -43,6 +45,8 @@ function App() {
                   onBaseHeightChange={setBaseHeight}
                   baseThickness={baseThickness}
                   onBaseThicknessChange={setBaseThickness}
+                  layerHeight={layerHeight}
+                  onLayerHeightChange={setLayerHeight}
                   layers={layers}
                   onLayersChange={setLayers}
                 />
