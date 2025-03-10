@@ -101,7 +101,7 @@
 
 .controls-group {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 20px;
   padding: 15px;
   background-color: rgba(255, 255, 255, 0.03);
@@ -127,6 +127,13 @@
   background-color: #282c34;
   color: white;
   font-size: 14px;
+}
+
+.control-item input[type="number"].disabled-input {
+  background-color: #1a1e23;
+  border-color: #3a3e43;
+  color: #8a8a8a;
+  cursor: not-allowed;
 }
 
 .control-item span {

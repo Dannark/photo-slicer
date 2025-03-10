@@ -26,23 +26,36 @@ const HeightControls: React.FC<HeightControlsProps> = ({
   layers,
   onLayersChange,
 }) => {
-  // Calcula o número total de camadas incluindo a base
-  const totalLayers = Math.floor((baseHeight + baseThickness) / layerHeight);
-  const baseLayerCount = Math.floor(baseThickness / layerHeight);
+  // Função para arredondar para 2 casas decimais
+  const roundToTwoDecimals = (num: number) => {
+    return Math.round(num * 100) / 100;
+  };
+
+  // Primeira camada é sempre o dobro da altura da camada normal
+  const firstLayerHeight = roundToTwoDecimals(layerHeight * 2);
+  
+  // Base adicional (além da primeira camada)
+  const additionalBaseThickness = roundToTwoDecimals(Math.max(0, baseThickness - firstLayerHeight));
+  
+  // Calcula o número total de camadas
+  const additionalBaseLayers = Math.floor(additionalBaseThickness / layerHeight);
+  const totalLayers = Math.floor(baseHeight / layerHeight) + additionalBaseLayers + 1; // +1 para a primeira camada
 
   const handleBaseThicknessChange = (value: number) => {
-    // Garante que a espessura da base seja múltiplo da altura da camada
-    const normalizedThickness = Math.round(value / layerHeight) * layerHeight;
+    // Garante que a espessura total da base não seja menor que a primeira camada
+    const minThickness = firstLayerHeight;
+    const normalizedThickness = roundToTwoDecimals(Math.max(minThickness, Math.round((value - minThickness) / layerHeight) * layerHeight + minThickness));
     onBaseThicknessChange(normalizedThickness);
   };
 
   const handleLayerHeightChange = (value: number) => {
     // Garante um valor mínimo para a altura da camada
-    const newLayerHeight = Math.max(0.04, value);
+    const newLayerHeight = roundToTwoDecimals(Math.max(0.04, value));
     onLayerHeightChange(newLayerHeight);
     
-    // Ajusta a espessura da base para ser múltiplo da nova altura da camada
-    const newBaseThickness = Math.round(baseThickness / newLayerHeight) * newLayerHeight;
+    // Ajusta a espessura da base para manter o número de camadas adicionais
+    const newFirstLayerHeight = roundToTwoDecimals(newLayerHeight * 2);
+    const newBaseThickness = roundToTwoDecimals(newFirstLayerHeight + (additionalBaseLayers * newLayerHeight));
     onBaseThicknessChange(newBaseThickness);
   };
 
@@ -62,15 +75,26 @@ const HeightControls: React.FC<HeightControlsProps> = ({
         </div>
 
         <div className="control-item">
-          <label>Espessura da Base (mm):</label>
+          <label>Primeira Camada (mm):</label>
           <input
             type="number"
-            min={layerHeight}
-            step={layerHeight}
-            value={baseThickness}
-            onChange={(e) => handleBaseThicknessChange(Number(e.target.value))}
+            value={firstLayerHeight}
+            disabled
+            className="disabled-input"
           />
-          <span>Camadas da Base: {baseLayerCount}</span>
+          <span>Sempre 2x a altura da camada</span>
+        </div>
+
+        <div className="control-item">
+          <label>Base Adicional (mm):</label>
+          <input
+            type="number"
+            min="0"
+            step={layerHeight}
+            value={additionalBaseThickness}
+            onChange={(e) => handleBaseThicknessChange(e.target.value ? Number(e.target.value) + firstLayerHeight : firstLayerHeight)}
+          />
+          <span>Camadas adicionais: {additionalBaseLayers}</span>
         </div>
 
         <div className="control-item">
@@ -89,7 +113,7 @@ const HeightControls: React.FC<HeightControlsProps> = ({
       <div className="layers-control">
         <h3>Configuração das Camadas</h3>
         {layers.map((layer, index) => {
-          const currentLayer = Math.floor((layer.heightPercentage / 100) * (totalLayers - baseLayerCount));
+          const currentLayer = Math.floor((layer.heightPercentage / 100) * (totalLayers - additionalBaseLayers - 1));
           return (
             <div key={index} className="layer-control">
               <input
@@ -105,16 +129,16 @@ const HeightControls: React.FC<HeightControlsProps> = ({
                 <input
                   type="range"
                   min="0"
-                  max={totalLayers - baseLayerCount}
+                  max={totalLayers - additionalBaseLayers - 1}
                   value={currentLayer}
                   onChange={(e) => {
                     const newLayers = [...layers];
-                    const heightPercentage = (Number(e.target.value) / (totalLayers - baseLayerCount)) * 100;
+                    const heightPercentage = (Number(e.target.value) / (totalLayers - additionalBaseLayers - 1)) * 100;
                     newLayers[index] = { ...newLayers[index], heightPercentage };
                     onLayersChange(newLayers);
                   }}
                 />
-                <span>Camada {currentLayer} de {totalLayers - baseLayerCount}</span>
+                <span>Camada {currentLayer} de {totalLayers - additionalBaseLayers - 1}</span>
               </div>
             </div>
           );
