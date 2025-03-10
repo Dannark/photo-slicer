@@ -1,19 +1,22 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { LayerConfig } from './HeightControls';
 import ColorPicker from './ColorPicker';
+import PatternSelector from './PatternSelector';
 
 interface LayerColorSliderProps {
   layers: LayerConfig[];
   onChange: (layers: LayerConfig[]) => void;
   layerHeight: number;
   totalHeight: number;
+  imageData?: ImageData;
 }
 
 const LayerColorSlider: React.FC<LayerColorSliderProps> = ({ 
   layers, 
   onChange, 
   layerHeight,
-  totalHeight 
+  totalHeight,
+  imageData 
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -171,6 +174,21 @@ const LayerColorSlider: React.FC<LayerColorSliderProps> = ({
     canvas.height = CANVAS_HEIGHT;
     drawSlider();
   }, [layers, hoveredY, isDragging]);
+
+  // Adiciona um useEffect para monitorar o imageData
+  useEffect(() => {
+    console.log('LayerColorSlider - imageData atualizado:', {
+      presente: !!imageData,
+      dimensoes: imageData ? `${imageData.width}x${imageData.height}` : 'N/A',
+      dadosPresentes: imageData ? `${imageData.data.length} bytes` : 'N/A',
+      primeiroPixel: imageData ? `R:${imageData.data[0]},G:${imageData.data[1]},B:${imageData.data[2]}` : 'N/A'
+    });
+  }, [imageData]);
+
+  useEffect(() => {
+    console.log('LayerColorSlider - Layers atualizados:', layers);
+    drawSlider();
+  }, [layers]);
 
   const getCanvasCoordinates = (e: React.MouseEvent) => {
     const canvas = canvasRef.current;
@@ -351,8 +369,14 @@ const LayerColorSlider: React.FC<LayerColorSliderProps> = ({
     setSelectedDividerIndex(null);
   };
 
+  const handlePatternSelect = (newLayers: LayerConfig[]) => {
+    console.log('LayerColorSlider - Novo padrão recebido:', newLayers);
+    onChange(newLayers);
+  };
+
   return (
-    <div className="layer-color-slider" ref={containerRef}>
+    <div ref={containerRef} className="layer-color-slider">
+      <PatternSelector onSelectPattern={handlePatternSelect} imageData={imageData} />
       <canvas
         ref={canvasRef}
         onMouseMove={handleMouseMove}
@@ -368,9 +392,9 @@ const LayerColorSlider: React.FC<LayerColorSliderProps> = ({
           height: '400px'
         }}
       />
-      {showColorPicker && (
+      {showColorPicker && selectedDividerIndex !== null && (
         <ColorPicker
-          onColorSelect={handleColorSelect}
+          onColorSelect={(color) => handleColorSelect(color)}
           onClose={() => setShowColorPicker(false)}
         />
       )}

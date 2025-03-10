@@ -1,5 +1,4 @@
 import React from 'react';
-import LayerColorSlider from './LayerColorSlider';
 
 export interface LayerConfig {
   color: string;
@@ -13,8 +12,6 @@ interface HeightControlsProps {
   onBaseThicknessChange: (thickness: number) => void;
   layerHeight: number;
   onLayerHeightChange: (height: number) => void;
-  layers: LayerConfig[];
-  onLayersChange: (layers: LayerConfig[]) => void;
   resolution: number;
   onResolutionChange: (resolution: number) => void;
 }
@@ -26,8 +23,6 @@ const HeightControls: React.FC<HeightControlsProps> = ({
   onBaseThicknessChange,
   layerHeight,
   onLayerHeightChange,
-  layers,
-  onLayersChange,
   resolution,
   onResolutionChange,
 }) => {
@@ -130,18 +125,6 @@ const HeightControls: React.FC<HeightControlsProps> = ({
             <span>{resolution} vértices</span>
           </div>
           <span>Quanto maior, mais detalhado (50-800)</span>
-        </div>
-      </div>
-      
-      <div className="controls-group">
-        <div className="control-item">
-          <label>Configuração das Camadas</label>
-          <LayerColorSlider
-            layers={layers}
-            onChange={onLayersChange}
-            layerHeight={layerHeight}
-            totalHeight={baseHeight}
-          />
         </div>
       </div>
     </div>

@@ -3,6 +3,7 @@ import './App.css';
 import ImageUploader from './components/ImageUploader';
 import ThreeViewer from './components/ThreeViewer';
 import HeightControls, { LayerConfig } from './components/HeightControls';
+import LayerColorSlider from './components/LayerColorSlider';
 
 const DEFAULT_LAYER_HEIGHT = 0.08; // mm por camada
 const DEFAULT_BASE_THICKNESS = 0.16; // 2 camadas de base por padrão
@@ -20,10 +21,31 @@ function App() {
     { color: '#CCCCCC', heightPercentage: 66 },  // Cinza claro
     { color: '#FFFFFF', heightPercentage: 100 }  // Branco
   ]);
+  const [imageData, setImageData] = useState<ImageData | undefined>(undefined);
 
   const handleImageUpload = (file: File) => {
     const url = URL.createObjectURL(file);
     setImageUrl(url);
+
+    // Cria um canvas temporário para extrair o imageData
+    const img = new Image();
+    img.onload = () => {
+      const tempCanvas = document.createElement('canvas');
+      tempCanvas.width = img.width;
+      tempCanvas.height = img.height;
+      const tempCtx = tempCanvas.getContext('2d');
+      if (tempCtx) {
+        tempCtx.drawImage(img, 0, 0);
+        const newImageData = tempCtx.getImageData(0, 0, img.width, img.height);
+        setImageData(newImageData);
+      }
+    };
+    img.src = url;
+  };
+
+  const handleLayersChange = (newLayers: LayerConfig[]) => {
+    console.log('App - Layers atualizados:', newLayers);
+    setLayers(newLayers);
   };
 
   return (
@@ -46,10 +68,15 @@ function App() {
                 onBaseThicknessChange={setBaseThickness}
                 layerHeight={layerHeight}
                 onLayerHeightChange={setLayerHeight}
-                layers={layers}
-                onLayersChange={setLayers}
                 resolution={resolution}
                 onResolutionChange={setResolution}
+              />
+              <LayerColorSlider
+                layers={layers}
+                onChange={handleLayersChange}
+                layerHeight={layerHeight}
+                totalHeight={baseHeight}
+                imageData={imageData}
               />
             </aside>
 

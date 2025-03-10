@@ -1,10 +1,13 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { Canvas, useThree } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import * as THREE from 'three';
 import { STLExporter } from 'three-stdlib';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils';
 import { LayerConfig } from './HeightControls';
+import ImageUploader from './ImageUploader';
+import HeightControls from './HeightControls';
+import LayerColorSlider from './LayerColorSlider';
 
 // Constantes de dimensão
 const MODEL_MAX_SIZE = 100;  // Dimensão máxima em mm
@@ -55,12 +58,17 @@ const HeightMap = React.forwardRef<HeightMapRef, {
 
   useEffect(() => {
     if (meshRef.current && !materialRef.current) {
+      console.log('ThreeViewer - Criando material com layers:', layers);
       const initialColors = Array(5).fill(null).map(() => new THREE.Color(0x000000));
       const initialHeights = Array(5).fill(1.0);
 
       layers.forEach((layer, index) => {
         initialColors[index].set(layer.color);
         initialHeights[index] = layer.heightPercentage / 100;
+        console.log(`ThreeViewer - Layer inicial ${index}:`, {
+          color: layer.color,
+          height: layer.heightPercentage / 100
+        });
       });
 
       const material = new THREE.ShaderMaterial({
@@ -112,7 +120,7 @@ const HeightMap = React.forwardRef<HeightMapRef, {
             vec3 color = layerColors[0];
             
             for(int i = 1; i < 5; i++) {
-              if(i < numLayers && vHeight > layerHeights[i-1]) {
+              if(i < numLayers && vHeight >= layerHeights[i-1]) {
                 color = layerColors[i];
               }
             }
@@ -124,6 +132,7 @@ const HeightMap = React.forwardRef<HeightMapRef, {
 
       materialRef.current = material;
       meshRef.current.material = material;
+      console.log('ThreeViewer - Material criado com sucesso');
     }
   }, [meshRef.current]);
 
@@ -131,15 +140,19 @@ const HeightMap = React.forwardRef<HeightMapRef, {
   useEffect(() => {
     if (materialRef.current) {
       try {
-
+        console.log('ThreeViewer - Atualizando uniforms com layers:', layers);
+        console.log('ThreeViewer - Material atual:', materialRef.current);
         const colors = Array(5).fill(null).map(() => new THREE.Color(0x000000));
         const heights = Array(5).fill(1.0);
 
         layers.forEach((layer, index) => {
           colors[index].set(layer.color);
           heights[index] = layer.heightPercentage / 100;
+          console.log(`ThreeViewer - Layer ${index}:`, {
+            color: layer.color,
+            height: layer.heightPercentage / 100
+          });
         });
-
 
         materialRef.current.uniforms.heightMap.value = texture;
         materialRef.current.uniforms.baseHeight.value = baseHeight;
@@ -149,6 +162,13 @@ const HeightMap = React.forwardRef<HeightMapRef, {
         materialRef.current.uniforms.layerHeight.value = layerHeight;
         materialRef.current.uniforms.numLayers.value = layers.length;
         materialRef.current.needsUpdate = true;
+
+        console.log('ThreeViewer - Uniforms atualizados:', {
+          colors: colors.map(c => c.getHexString()),
+          heights,
+          numLayers: layers.length,
+          uniforms: materialRef.current.uniforms
+        });
 
       } catch (error) {
         console.error('Erro ao atualizar uniforms:', error);
@@ -410,6 +430,7 @@ const ThreeViewer: React.FC<ThreeViewerProps> = ({ imageUrl, baseHeight, baseThi
   const [texture, setTexture] = React.useState<THREE.Texture | null>(null);
   const [isSteppedMode, setIsSteppedMode] = React.useState(false);
   const heightMapRef = useRef<HeightMapRef>(null);
+  const [imageData, setImageData] = useState<ImageData | undefined>(undefined);
 
   useEffect(() => {
     if (imageUrl) {
@@ -420,6 +441,41 @@ const ThreeViewer: React.FC<ThreeViewerProps> = ({ imageUrl, baseHeight, baseThi
     }
   }, [imageUrl]);
 
+  const handleImageUpload = (file: File) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        // Cria um canvas temporário para extrair o imageData
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = img.width;
+        tempCanvas.height = img.height;
+        const tempCtx = tempCanvas.getContext('2d');
+        if (tempCtx) {
+          tempCtx.drawImage(img, 0, 0);
+          const newImageData = tempCtx.getImageData(0, 0, img.width, img.height);
+          console.log('ThreeViewer - ImageData criado:', {
+            width: newImageData.width,
+            height: newImageData.height,
+            dataLength: newImageData.data.length,
+            primeiroPixel: `R:${newImageData.data[0]},G:${newImageData.data[1]},B:${newImageData.data[2]}`
+          });
+          setImageData(newImageData);
+
+          // Cria a URL para a textura
+          const url = URL.createObjectURL(file);
+          const loader = new THREE.TextureLoader();
+          loader.load(url, (loadedTexture) => {
+            setTexture(loadedTexture);
+            URL.revokeObjectURL(url);
+          });
+        }
+      };
+      img.src = e.target?.result as string;
+    };
+    reader.readAsDataURL(file);
+  };
+
   const handleExport = () => {
     if (heightMapRef.current) {
       heightMapRef.current.exportToSTL();
@@ -429,15 +485,18 @@ const ThreeViewer: React.FC<ThreeViewerProps> = ({ imageUrl, baseHeight, baseThi
   return (
     <div className="three-viewer">
       <div className="viewer-controls">
-        <button 
-          onClick={() => setIsSteppedMode(!isSteppedMode)} 
+        <ImageUploader onImageUpload={handleImageUpload} />
+        <button
           className={`preview-mode-button ${isSteppedMode ? 'active' : ''}`}
+          onClick={() => setIsSteppedMode(!isSteppedMode)}
         >
           {isSteppedMode ? 'Visualização Suave' : 'Visualização em Camadas'}
         </button>
-        <button onClick={handleExport} className="export-button">
-          Exportar STL
-        </button>
+        {texture && (
+          <button className="export-button" onClick={handleExport}>
+            Exportar STL
+          </button>
+        )}
       </div>
       <div style={{ width: '100%', height: '500px' }}>
         <Canvas camera={{ position: [0, 50, 100], fov: 75 }}>
