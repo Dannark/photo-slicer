@@ -26,8 +26,10 @@ const HeightMap = React.forwardRef<HeightMapRef, {
   baseHeight: number;
   baseThickness: number;
   layers: LayerConfig[];
-  resolution: number; // Nova prop para resolução
-}>(({ texture, baseHeight, baseThickness, layers, resolution }, ref) => {
+  resolution: number;
+  isSteppedMode: boolean;
+  layerHeight: number; // Nova prop para altura da camada
+}>(({ texture, baseHeight, baseThickness, layers, resolution, isSteppedMode, layerHeight }, ref) => {
   const meshRef = useRef<THREE.Mesh>(null);
   const materialRef = useRef<THREE.ShaderMaterial>(null);
   const { scene } = useThree();
@@ -60,15 +62,31 @@ const HeightMap = React.forwardRef<HeightMapRef, {
       baseHeight: { value: baseHeight },
       layerColors: { value: layers.map(l => new THREE.Color(l.color)) },
       layerHeights: { value: layers.map(l => l.heightPercentage / 100) },
+      isSteppedMode: { value: isSteppedMode },
+      layerHeight: { value: layerHeight }, // Novo uniform
     },
     vertexShader: `
       uniform sampler2D heightMap;
       uniform float baseHeight;
+      uniform float layerHeights[4];
+      uniform bool isSteppedMode;
+      uniform float layerHeight;
       varying float vHeight;
+      
+      float getSteppedHeight(float height) {
+        // Calcula quantas camadas completas cabem nesta altura
+        float numLayers = floor(height / layerHeight);
+        return numLayers * layerHeight;
+      }
       
       void main() {
         vec4 heightColor = texture2D(heightMap, uv);
         float height = heightColor.r * baseHeight;
+        
+        if (isSteppedMode) {
+          height = getSteppedHeight(height);
+        }
+        
         vHeight = height / baseHeight;
         
         vec3 pos = position;
@@ -101,8 +119,10 @@ const HeightMap = React.forwardRef<HeightMapRef, {
       materialRef.current.uniforms.baseHeight.value = baseHeight;
       materialRef.current.uniforms.layerColors.value = layers.map(l => new THREE.Color(l.color));
       materialRef.current.uniforms.layerHeights.value = layers.map(l => l.heightPercentage / 100);
+      materialRef.current.uniforms.isSteppedMode.value = isSteppedMode;
+      materialRef.current.uniforms.layerHeight.value = layerHeight;
     }
-  }, [baseHeight, layers]);
+  }, [baseHeight, layers, isSteppedMode, layerHeight]);
 
   const createGeometryWithHeight = () => {
     // Calcula as dimensões baseadas na proporção da imagem
@@ -130,6 +150,13 @@ const HeightMap = React.forwardRef<HeightMapRef, {
     // Atualiza os vértices com base na altura
     const positions = geometry.attributes.position.array;
     const baseThicknessValue = baseThickness;
+
+    // Função para calcular a altura em degraus
+    const getSteppedHeight = (height: number) => {
+      // Calcula quantas camadas completas cabem nesta altura
+      const numLayers = Math.floor(height / layerHeight);
+      return numLayers * layerHeight;
+    };
 
     // Mapeia as coordenadas x e y únicas para encontrar os vértices mais externos
     const uniqueX = new Set<number>();
@@ -164,7 +191,13 @@ const HeightMap = React.forwardRef<HeightMapRef, {
       const pixelY = Math.floor((y - minY) / (maxY - minY) * (canvas.height - 1));
       const pixelIndex = (pixelY * canvas.width + pixelX) * 4;
 
-      const height = (pixels[pixelIndex] + pixels[pixelIndex + 1] + pixels[pixelIndex + 2]) / (3 * 255) * baseHeight;
+      let height = (pixels[pixelIndex] + pixels[pixelIndex + 1] + pixels[pixelIndex + 2]) / (3 * 255) * baseHeight;
+      
+      // Aplica o modo stepped se estiver ativo
+      if (isSteppedMode) {
+        height = getSteppedHeight(height);
+      }
+      
       positions[idx + 2] = height;
 
       // Classifica os vértices das bordas usando comparação exata
@@ -344,7 +377,9 @@ const HeightMap = React.forwardRef<HeightMapRef, {
 
 const ThreeViewer: React.FC<ThreeViewerProps> = ({ imageUrl, baseHeight, baseThickness, layers, resolution }) => {
   const [texture, setTexture] = React.useState<THREE.Texture | null>(null);
+  const [isSteppedMode, setIsSteppedMode] = React.useState(false);
   const heightMapRef = useRef<HeightMapRef>(null);
+  const layerHeight = 0.08; // Podemos receber isso como prop também
 
   useEffect(() => {
     if (imageUrl) {
@@ -364,6 +399,12 @@ const ThreeViewer: React.FC<ThreeViewerProps> = ({ imageUrl, baseHeight, baseThi
   return (
     <div className="three-viewer">
       <div className="viewer-controls">
+        <button 
+          onClick={() => setIsSteppedMode(!isSteppedMode)} 
+          className={`preview-mode-button ${isSteppedMode ? 'active' : ''}`}
+        >
+          {isSteppedMode ? 'Visualização Suave' : 'Visualização em Camadas'}
+        </button>
         <button onClick={handleExport} className="export-button">
           Exportar STL
         </button>
@@ -381,6 +422,8 @@ const ThreeViewer: React.FC<ThreeViewerProps> = ({ imageUrl, baseHeight, baseThi
               baseThickness={baseThickness} 
               layers={layers}
               resolution={resolution}
+              isSteppedMode={isSteppedMode}
+              layerHeight={layerHeight}
             />
           )}
         </Canvas>

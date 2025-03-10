@@ -256,8 +256,29 @@
 
 .viewer-controls {
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
   padding: 10px;
+  gap: 10px;
+}
+
+.preview-mode-button {
+  background-color: #282c34;
+  color: #61dafb;
+  border: 1px solid #61dafb;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: all 0.2s;
+}
+
+.preview-mode-button:hover {
+  background-color: rgba(97, 218, 251, 0.1);
+}
+
+.preview-mode-button.active {
+  background-color: #61dafb;
+  color: #282c34;
 }
 
 .export-button {
