@@ -1,4 +1,5 @@
 import React from 'react';
+import LayerColorSlider from './LayerColorSlider';
 
 export interface LayerConfig {
   color: string;
@@ -132,39 +133,16 @@ const HeightControls: React.FC<HeightControlsProps> = ({
         </div>
       </div>
       
-      <div className="layers-control">
-        <h3>Configuração das Camadas</h3>
-        {layers.map((layer, index) => {
-          const currentLayer = Math.floor((layer.heightPercentage / 100) * (totalLayers - additionalBaseLayers - 1));
-          return (
-            <div key={index} className="layer-control">
-              <input
-                type="color"
-                value={layer.color}
-                onChange={(e) => {
-                  const newLayers = [...layers];
-                  newLayers[index] = { ...newLayers[index], color: e.target.value };
-                  onLayersChange(newLayers);
-                }}
-              />
-              <div className="layer-slider-container">
-                <input
-                  type="range"
-                  min="0"
-                  max={totalLayers - additionalBaseLayers - 1}
-                  value={currentLayer}
-                  onChange={(e) => {
-                    const newLayers = [...layers];
-                    const heightPercentage = (Number(e.target.value) / (totalLayers - additionalBaseLayers - 1)) * 100;
-                    newLayers[index] = { ...newLayers[index], heightPercentage };
-                    onLayersChange(newLayers);
-                  }}
-                />
-                <span>Camada {currentLayer} de {totalLayers - additionalBaseLayers - 1}</span>
-              </div>
-            </div>
-          );
-        })}
+      <div className="controls-group">
+        <div className="control-item">
+          <label>Configuração das Camadas</label>
+          <LayerColorSlider
+            layers={layers}
+            onChange={onLayersChange}
+            layerHeight={layerHeight}
+            totalHeight={baseHeight}
+          />
+        </div>
       </div>
     </div>
   );

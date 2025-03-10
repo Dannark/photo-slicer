@@ -28,46 +28,44 @@ function App() {
 
   return (
     <div className="App">
-      <header className="App-header">
-        <h1>Photo to 3D Converter</h1>
-      </header>
-      <main>
-        <div className="container">
-          <section className="upload-section">
-            <ImageUploader 
-              onImageUpload={handleImageUpload}
-              imageLoaded={!!imageUrl}
-            />
-          </section>
-          {imageUrl && (
-            <>
-              <section className="controls-section">
-                <HeightControls
-                  baseHeight={baseHeight}
-                  onBaseHeightChange={setBaseHeight}
-                  baseThickness={baseThickness}
-                  onBaseThicknessChange={setBaseThickness}
-                  layerHeight={layerHeight}
-                  onLayerHeightChange={setLayerHeight}
-                  layers={layers}
-                  onLayersChange={setLayers}
-                  resolution={resolution}
-                  onResolutionChange={setResolution}
-                />
-              </section>
-              <section className="viewer-section">
-                <ThreeViewer 
-                  imageUrl={imageUrl}
-                  baseHeight={baseHeight}
-                  baseThickness={baseThickness}
-                  layers={layers}
-                  resolution={resolution}
-                />
-              </section>
-            </>
+      <div className="container">
+        <header className="App-header">
+          <h1>Photo Slicer</h1>
+          {!imageUrl && (
+            <ImageUploader onImageUpload={handleImageUpload} />
           )}
-        </div>
-      </main>
+        </header>
+
+        {imageUrl && (
+          <>
+            <aside className="sidebar">
+              <HeightControls
+                baseHeight={baseHeight}
+                onBaseHeightChange={setBaseHeight}
+                baseThickness={baseThickness}
+                onBaseThicknessChange={setBaseThickness}
+                layerHeight={layerHeight}
+                onLayerHeightChange={setLayerHeight}
+                layers={layers}
+                onLayersChange={setLayers}
+                resolution={resolution}
+                onResolutionChange={setResolution}
+              />
+            </aside>
+
+            <main className="main-content">
+              <ThreeViewer
+                imageUrl={imageUrl}
+                baseHeight={baseHeight}
+                baseThickness={baseThickness}
+                layers={layers}
+                resolution={resolution}
+                layerHeight={layerHeight}
+              />
+            </main>
+          </>
+        )}
+      </div>
     </div>
   );
 }

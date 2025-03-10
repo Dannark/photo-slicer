@@ -14,7 +14,8 @@ interface ThreeViewerProps {
   baseHeight: number;
   baseThickness: number;
   layers: LayerConfig[];
-  resolution: number; // Nova prop para resolução
+  resolution: number;
+  layerHeight: number;
 }
 
 interface HeightMapRef {
@@ -375,11 +376,10 @@ const HeightMap = React.forwardRef<HeightMapRef, {
   );
 });
 
-const ThreeViewer: React.FC<ThreeViewerProps> = ({ imageUrl, baseHeight, baseThickness, layers, resolution }) => {
+const ThreeViewer: React.FC<ThreeViewerProps> = ({ imageUrl, baseHeight, baseThickness, layers, resolution, layerHeight }) => {
   const [texture, setTexture] = React.useState<THREE.Texture | null>(null);
   const [isSteppedMode, setIsSteppedMode] = React.useState(false);
   const heightMapRef = useRef<HeightMapRef>(null);
-  const layerHeight = 0.08; // Podemos receber isso como prop também
 
   useEffect(() => {
     if (imageUrl) {
