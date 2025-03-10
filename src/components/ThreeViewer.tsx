@@ -7,8 +7,7 @@ import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils';
 import { LayerConfig } from './HeightControls';
 
 // Constantes de dimensão
-const MODEL_WIDTH = 100;  // 100mm = 10cm
-const MODEL_HEIGHT = 100; // 100mm = 10cm
+const MODEL_MAX_SIZE = 100;  // Dimensão máxima em mm
 const RESOLUTION = 200;   // Resolução da malha
 
 interface ThreeViewerProps {
@@ -31,6 +30,27 @@ const HeightMap = React.forwardRef<HeightMapRef, {
   const meshRef = useRef<THREE.Mesh>(null);
   const materialRef = useRef<THREE.ShaderMaterial>(null);
   const { scene } = useThree();
+
+  // Calcula as dimensões mantendo a proporção da imagem
+  const calculateDimensions = (width: number, height: number) => {
+    const aspectRatio = width / height;
+    let modelWidth, modelHeight;
+
+    if (aspectRatio > 1) {
+      // Imagem mais larga que alta
+      modelWidth = MODEL_MAX_SIZE;
+      modelHeight = MODEL_MAX_SIZE / aspectRatio;
+    } else {
+      // Imagem mais alta que larga
+      modelHeight = MODEL_MAX_SIZE;
+      modelWidth = MODEL_MAX_SIZE * aspectRatio;
+    }
+
+    return { width: modelWidth, height: modelHeight };
+  };
+
+  // Calcula as dimensões uma vez e reutiliza
+  const dimensions = calculateDimensions(texture.image.width, texture.image.height);
 
   // Shader personalizado para aplicar as cores baseado na altura
   const shader = {
@@ -84,8 +104,17 @@ const HeightMap = React.forwardRef<HeightMapRef, {
   }, [baseHeight, layers]);
 
   const createGeometryWithHeight = () => {
-    // Cria a geometria inicial
-    const geometry = new THREE.PlaneGeometry(MODEL_WIDTH, MODEL_HEIGHT, RESOLUTION - 1, RESOLUTION - 1);
+    // Calcula as dimensões baseadas na proporção da imagem
+    const dimensions = calculateDimensions(texture.image.width, texture.image.height);
+    
+    // Cria a geometria inicial com as dimensões proporcionais
+    const geometry = new THREE.PlaneGeometry(
+      dimensions.width,
+      dimensions.height,
+      Math.floor(RESOLUTION * (dimensions.width / MODEL_MAX_SIZE)) - 1,
+      Math.floor(RESOLUTION * (dimensions.height / MODEL_MAX_SIZE)) - 1
+    );
+
     const canvas = document.createElement('canvas');
     canvas.width = texture.image.width;
     canvas.height = texture.image.height;
@@ -129,8 +158,9 @@ const HeightMap = React.forwardRef<HeightMapRef, {
       const x = positions[idx];
       const y = positions[idx + 1];
 
-      const pixelX = Math.floor((x + MODEL_WIDTH/2) / MODEL_WIDTH * (canvas.width - 1));
-      const pixelY = Math.floor((y + MODEL_HEIGHT/2) / MODEL_HEIGHT * (canvas.width - 1));
+      // Ajusta o mapeamento de pixels para considerar as dimensões proporcionais
+      const pixelX = Math.floor((x - minX) / (maxX - minX) * (canvas.width - 1));
+      const pixelY = Math.floor((y - minY) / (maxY - minY) * (canvas.height - 1));
       const pixelIndex = (pixelY * canvas.width + pixelX) * 4;
 
       const height = (pixels[pixelIndex] + pixels[pixelIndex + 1] + pixels[pixelIndex + 2]) / (3 * 255) * baseHeight;
@@ -305,7 +335,7 @@ const HeightMap = React.forwardRef<HeightMapRef, {
 
   return (
     <mesh ref={meshRef} rotation={[-Math.PI / 2, 0, 0]}>
-      <planeGeometry args={[MODEL_WIDTH, MODEL_HEIGHT, RESOLUTION - 1, RESOLUTION - 1]} />
+      <planeGeometry args={[dimensions.width, dimensions.height, Math.floor(RESOLUTION * (dimensions.width / MODEL_MAX_SIZE)) - 1, Math.floor(RESOLUTION * (dimensions.height / MODEL_MAX_SIZE)) - 1]} />
       <shaderMaterial ref={materialRef} args={[shader]} />
     </mesh>
   );
