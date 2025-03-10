@@ -14,6 +14,7 @@ const RESOLUTION = 200;   // Resolução da malha
 interface ThreeViewerProps {
   imageUrl: string | null;
   baseHeight: number;
+  baseThickness: number;
   layers: LayerConfig[];
 }
 
@@ -24,8 +25,9 @@ interface HeightMapRef {
 const HeightMap = React.forwardRef<HeightMapRef, {
   texture: THREE.Texture;
   baseHeight: number;
+  baseThickness: number;
   layers: LayerConfig[];
-}>(({ texture, baseHeight, layers }, ref) => {
+}>(({ texture, baseHeight, baseThickness, layers }, ref) => {
   const meshRef = useRef<THREE.Mesh>(null);
   const materialRef = useRef<THREE.ShaderMaterial>(null);
   const { scene } = useThree();
@@ -97,7 +99,7 @@ const HeightMap = React.forwardRef<HeightMapRef, {
 
     // Atualiza os vértices com base na altura
     const positions = geometry.attributes.position.array;
-    const baseThickness = 0.8; // Espessura da base em mm
+    const baseThicknessValue = baseThickness;
 
     // Mapeia as coordenadas x e y únicas para encontrar os vértices mais externos
     const uniqueX = new Set<number>();
@@ -168,7 +170,7 @@ const HeightMap = React.forwardRef<HeightMapRef, {
         newPositions.push(
           positions[baseIndex],
           positions[baseIndex + 1],
-          -baseThickness
+          -baseThicknessValue
         );
         wallVertices.push(newPositions.length / 3 - 1);
       });
@@ -201,6 +203,68 @@ const HeightMap = React.forwardRef<HeightMapRef, {
     createWallFaces(rightEdge);
     createWallFaces(topEdge);
     createWallFaces(bottomEdge);
+
+    // Cria a base (bottom face)
+    // Primeiro, adiciona o vértice central
+    const centerX = 0;
+    const centerY = 0;
+    const centerZ = -baseThicknessValue;
+    newPositions.push(centerX, centerY, centerZ);
+    const centerIndex = newPositions.length / 3 - 1;
+
+    // Coleta todos os vértices inferiores das paredes em ordem horária
+    const bottomVertices: number[] = [];
+    
+    // Função auxiliar para adicionar vértices sem duplicatas
+    const addUniqueVertex = (x: number, y: number) => {
+      const vertexIndex = newPositions.length / 3;
+      newPositions.push(x, y, -baseThicknessValue);
+      bottomVertices.push(vertexIndex);
+    };
+
+    // Adiciona os vértices em ordem horária
+    // Começa com a borda inferior (da esquerda para a direita)
+    bottomEdge.forEach(idx => {
+      addUniqueVertex(positions[idx * 3], positions[idx * 3 + 1]);
+    });
+
+    // Borda direita (de baixo para cima)
+    rightEdge.forEach(idx => {
+      addUniqueVertex(positions[idx * 3], positions[idx * 3 + 1]);
+    });
+
+    // Borda superior (da direita para a esquerda)
+    topEdge.reverse().forEach(idx => {
+      addUniqueVertex(positions[idx * 3], positions[idx * 3 + 1]);
+    });
+
+    // Borda esquerda (de cima para baixo)
+    leftEdge.reverse().forEach(idx => {
+      addUniqueVertex(positions[idx * 3], positions[idx * 3 + 1]);
+    });
+
+    // Remove vértices duplicados nas junções das bordas
+    const uniqueBottomVertices = bottomVertices.filter((vertex, index, self) => {
+      if (index === 0) return true;
+      const prevX = newPositions[self[index - 1] * 3];
+      const prevY = newPositions[self[index - 1] * 3 + 1];
+      const currX = newPositions[vertex * 3];
+      const currY = newPositions[vertex * 3 + 1];
+      return Math.abs(prevX - currX) > 0.001 || Math.abs(prevY - currY) > 0.001;
+    });
+
+    // Cria os triângulos da base conectando ao centro
+    for (let i = 0; i < uniqueBottomVertices.length; i++) {
+      const current = uniqueBottomVertices[i];
+      const next = uniqueBottomVertices[(i + 1) % uniqueBottomVertices.length];
+      
+      // Cria triângulo no sentido anti-horário para a face ficar para cima
+      newIndices.push(
+        centerIndex,
+        next,
+        current
+      );
+    }
 
     // Atualiza a geometria com os novos vértices e faces
     const finalGeometry = new THREE.BufferGeometry();
@@ -247,7 +311,7 @@ const HeightMap = React.forwardRef<HeightMapRef, {
   );
 });
 
-const ThreeViewer: React.FC<ThreeViewerProps> = ({ imageUrl, baseHeight, layers }) => {
+const ThreeViewer: React.FC<ThreeViewerProps> = ({ imageUrl, baseHeight, baseThickness, layers }) => {
   const [texture, setTexture] = React.useState<THREE.Texture | null>(null);
   const heightMapRef = useRef<HeightMapRef>(null);
 
@@ -283,6 +347,7 @@ const ThreeViewer: React.FC<ThreeViewerProps> = ({ imageUrl, baseHeight, layers 
               ref={heightMapRef}
               texture={texture} 
               baseHeight={baseHeight} 
+              baseThickness={baseThickness} 
               layers={layers} 
             />
           )}

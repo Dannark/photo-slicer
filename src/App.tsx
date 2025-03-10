@@ -1,23 +1,25 @@
 import React, { useState } from 'react';
+import './App.css';
 import ImageUploader from './components/ImageUploader';
 import ThreeViewer from './components/ThreeViewer';
 import HeightControls, { LayerConfig } from './components/HeightControls';
-import './App.css';
 
-const DEFAULT_LAYERS: LayerConfig[] = [
-  { color: '#000000', heightPercentage: 0 },   // Preto
-  { color: '#666666', heightPercentage: 25 },  // Cinza escuro
-  { color: '#CCCCCC', heightPercentage: 50 },  // Cinza claro
-  { color: '#FFFFFF', heightPercentage: 75 },  // Branco
-];
+const DEFAULT_BASE_THICKNESS = 0.16; // 2 camadas de base por padrão
 
 function App() {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
-  const [baseHeight, setBaseHeight] = useState<number>(2); // 2mm de altura padrão
-  const [layers, setLayers] = useState<LayerConfig[]>(DEFAULT_LAYERS);
+  const [baseHeight, setBaseHeight] = useState(2);
+  const [baseThickness, setBaseThickness] = useState(DEFAULT_BASE_THICKNESS);
+  const [layers, setLayers] = useState<LayerConfig[]>([
+    { color: '#000000', heightPercentage: 10 },   // Preto
+    { color: '#666666', heightPercentage: 33 },  // Cinza escuro
+    { color: '#CCCCCC', heightPercentage: 66 },  // Cinza claro
+    { color: '#FFFFFF', heightPercentage: 100 }  // Branco
+  ]);
 
-  const handleImageUpload = (uploadedImageUrl: string) => {
-    setImageUrl(uploadedImageUrl);
+  const handleImageUpload = (file: File) => {
+    const url = URL.createObjectURL(file);
+    setImageUrl(url);
   };
 
   return (
@@ -28,7 +30,10 @@ function App() {
       <main>
         <div className="container">
           <section className="upload-section">
-            <ImageUploader onImageUpload={handleImageUpload} />
+            <ImageUploader 
+              onImageUpload={handleImageUpload}
+              imageLoaded={!!imageUrl}
+            />
           </section>
           {imageUrl && (
             <>
@@ -36,6 +41,8 @@ function App() {
                 <HeightControls
                   baseHeight={baseHeight}
                   onBaseHeightChange={setBaseHeight}
+                  baseThickness={baseThickness}
+                  onBaseThicknessChange={setBaseThickness}
                   layers={layers}
                   onLayersChange={setLayers}
                 />
@@ -44,6 +51,7 @@ function App() {
                 <ThreeViewer 
                   imageUrl={imageUrl}
                   baseHeight={baseHeight}
+                  baseThickness={baseThickness}
                   layers={layers}
                 />
               </section>
