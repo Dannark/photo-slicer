@@ -6,12 +6,14 @@ import HeightControls, { LayerConfig } from './components/HeightControls';
 
 const DEFAULT_LAYER_HEIGHT = 0.08; // mm por camada
 const DEFAULT_BASE_THICKNESS = 0.16; // 2 camadas de base por padrão
+const DEFAULT_RESOLUTION = 200; // Resolução padrão da malha
 
 function App() {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [baseHeight, setBaseHeight] = useState(2);
   const [layerHeight, setLayerHeight] = useState(DEFAULT_LAYER_HEIGHT);
   const [baseThickness, setBaseThickness] = useState(DEFAULT_BASE_THICKNESS);
+  const [resolution, setResolution] = useState(DEFAULT_RESOLUTION);
   const [layers, setLayers] = useState<LayerConfig[]>([
     { color: '#000000', heightPercentage: 10 },   // Preto
     { color: '#666666', heightPercentage: 33 },  // Cinza escuro
@@ -49,6 +51,8 @@ function App() {
                   onLayerHeightChange={setLayerHeight}
                   layers={layers}
                   onLayersChange={setLayers}
+                  resolution={resolution}
+                  onResolutionChange={setResolution}
                 />
               </section>
               <section className="viewer-section">
@@ -57,6 +61,7 @@ function App() {
                   baseHeight={baseHeight}
                   baseThickness={baseThickness}
                   layers={layers}
+                  resolution={resolution}
                 />
               </section>
             </>

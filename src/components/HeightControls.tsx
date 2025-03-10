@@ -14,6 +14,8 @@ interface HeightControlsProps {
   onLayerHeightChange: (height: number) => void;
   layers: LayerConfig[];
   onLayersChange: (layers: LayerConfig[]) => void;
+  resolution: number;
+  onResolutionChange: (resolution: number) => void;
 }
 
 const HeightControls: React.FC<HeightControlsProps> = ({
@@ -25,6 +27,8 @@ const HeightControls: React.FC<HeightControlsProps> = ({
   onLayerHeightChange,
   layers,
   onLayersChange,
+  resolution,
+  onResolutionChange,
 }) => {
   // Função para arredondar para 2 casas decimais
   const roundToTwoDecimals = (num: number) => {
@@ -107,6 +111,24 @@ const HeightControls: React.FC<HeightControlsProps> = ({
             onChange={(e) => onBaseHeightChange(Number(e.target.value))}
           />
           <span>Total de Camadas: {totalLayers}</span>
+        </div>
+      </div>
+      
+      <div className="controls-group">
+        <div className="control-item">
+          <label>Resolução da Malha:</label>
+          <div className="resolution-slider-container">
+            <input
+              type="range"
+              min="50"
+              max="800"
+              step="10"
+              value={resolution}
+              onChange={(e) => onResolutionChange(Number(e.target.value))}
+            />
+            <span>{resolution} vértices</span>
+          </div>
+          <span>Quanto maior, mais detalhado (50-800)</span>
         </div>
       </div>
       

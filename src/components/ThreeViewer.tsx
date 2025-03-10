@@ -8,13 +8,13 @@ import { LayerConfig } from './HeightControls';
 
 // Constantes de dimensão
 const MODEL_MAX_SIZE = 100;  // Dimensão máxima em mm
-const RESOLUTION = 200;   // Resolução da malha
 
 interface ThreeViewerProps {
   imageUrl: string | null;
   baseHeight: number;
   baseThickness: number;
   layers: LayerConfig[];
+  resolution: number; // Nova prop para resolução
 }
 
 interface HeightMapRef {
@@ -26,7 +26,8 @@ const HeightMap = React.forwardRef<HeightMapRef, {
   baseHeight: number;
   baseThickness: number;
   layers: LayerConfig[];
-}>(({ texture, baseHeight, baseThickness, layers }, ref) => {
+  resolution: number; // Nova prop para resolução
+}>(({ texture, baseHeight, baseThickness, layers, resolution }, ref) => {
   const meshRef = useRef<THREE.Mesh>(null);
   const materialRef = useRef<THREE.ShaderMaterial>(null);
   const { scene } = useThree();
@@ -111,8 +112,8 @@ const HeightMap = React.forwardRef<HeightMapRef, {
     const geometry = new THREE.PlaneGeometry(
       dimensions.width,
       dimensions.height,
-      Math.floor(RESOLUTION * (dimensions.width / MODEL_MAX_SIZE)) - 1,
-      Math.floor(RESOLUTION * (dimensions.height / MODEL_MAX_SIZE)) - 1
+      Math.floor(resolution * (dimensions.width / MODEL_MAX_SIZE)) - 1,
+      Math.floor(resolution * (dimensions.height / MODEL_MAX_SIZE)) - 1
     );
 
     const canvas = document.createElement('canvas');
@@ -335,13 +336,13 @@ const HeightMap = React.forwardRef<HeightMapRef, {
 
   return (
     <mesh ref={meshRef} rotation={[-Math.PI / 2, 0, 0]}>
-      <planeGeometry args={[dimensions.width, dimensions.height, Math.floor(RESOLUTION * (dimensions.width / MODEL_MAX_SIZE)) - 1, Math.floor(RESOLUTION * (dimensions.height / MODEL_MAX_SIZE)) - 1]} />
+      <planeGeometry args={[dimensions.width, dimensions.height, Math.floor(resolution * (dimensions.width / MODEL_MAX_SIZE)) - 1, Math.floor(resolution * (dimensions.height / MODEL_MAX_SIZE)) - 1]} />
       <shaderMaterial ref={materialRef} args={[shader]} />
     </mesh>
   );
 });
 
-const ThreeViewer: React.FC<ThreeViewerProps> = ({ imageUrl, baseHeight, baseThickness, layers }) => {
+const ThreeViewer: React.FC<ThreeViewerProps> = ({ imageUrl, baseHeight, baseThickness, layers, resolution }) => {
   const [texture, setTexture] = React.useState<THREE.Texture | null>(null);
   const heightMapRef = useRef<HeightMapRef>(null);
 
@@ -378,7 +379,8 @@ const ThreeViewer: React.FC<ThreeViewerProps> = ({ imageUrl, baseHeight, baseThi
               texture={texture} 
               baseHeight={baseHeight} 
               baseThickness={baseThickness} 
-              layers={layers} 
+              layers={layers}
+              resolution={resolution}
             />
           )}
         </Canvas>

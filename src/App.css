@@ -136,6 +136,36 @@
   cursor: not-allowed;
 }
 
+.resolution-slider-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.resolution-slider-container input[type="range"] {
+  flex: 1;
+  height: 4px;
+  -webkit-appearance: none;
+  background: #61dafb;
+  border-radius: 2px;
+}
+
+.resolution-slider-container input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  background: white;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.resolution-slider-container span {
+  min-width: 90px;
+  text-align: right;
+  color: #61dafb;
+}
+
 .control-item span {
   font-size: 0.8em;
   color: #8a8a8a;
