@@ -52,8 +52,20 @@ function App() {
     <div className="App">
       <div className="container">
         <header className="App-header">
-          <h1>Photo Slicer</h1>
-          <ImageUploader onImageUpload={handleImageUpload} imageLoaded={!!imageUrl} />
+          <div className="header-content">
+            <h1>Photo Slicer</h1>
+            <div className="header-buttons">
+              <ImageUploader onImageUpload={handleImageUpload} imageLoaded={!!imageUrl} />
+              <a 
+                href="https://ko-fi.com/Dannark" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="donate-button"
+              >
+                ☕ Me pague um café
+              </a>
+            </div>
+          </div>
         </header>
 
         {imageUrl && (
