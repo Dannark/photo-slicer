@@ -75,6 +75,7 @@ function App() {
                 layerHeight={layerHeight}
                 totalHeight={baseHeight}
                 imageData={imageData}
+                baseThickness={baseThickness}
               />
             </aside>
 

@@ -55,7 +55,7 @@ const HeightMap = React.forwardRef<HeightMapRef, {
   const dimensions = calculateDimensions(texture.image.width, texture.image.height);
 
   useEffect(() => {
-    if (meshRef.current && !materialRef.current) {
+    if (meshRef.current) {
       console.log('ThreeViewer - Criando material com layers:', layers);
       const initialColors = Array(5).fill(null).map(() => new THREE.Color(0x000000));
       const initialHeights = Array(5).fill(1.0);
@@ -77,7 +77,9 @@ const HeightMap = React.forwardRef<HeightMapRef, {
           layerHeights: { value: initialHeights },
           isSteppedMode: { value: isSteppedMode },
           layerHeight: { value: layerHeight },
-          numLayers: { value: layers.length }
+          numLayers: { value: layers.length },
+          baseThickness: { value: baseThickness },
+          firstLayerHeight: { value: layerHeight * 2 }
         },
         vertexShader: `
           uniform sampler2D heightMap;
@@ -85,7 +87,9 @@ const HeightMap = React.forwardRef<HeightMapRef, {
           uniform float layerHeights[5];
           uniform bool isSteppedMode;
           uniform float layerHeight;
-          varying float vHeight;
+          uniform float baseThickness;
+          uniform float firstLayerHeight;
+          varying float vLayerNumber;
           
           float getSteppedHeight(float height) {
             float numLayers = floor(height / layerHeight);
@@ -100,7 +104,23 @@ const HeightMap = React.forwardRef<HeightMapRef, {
               height = getSteppedHeight(height);
             }
             
-            vHeight = height / baseHeight;
+            // Calcula o número da camada atual
+            float totalHeight = height + baseThickness;
+            float currentLayer = 1.0; // Começa na camada 1 (base)
+            
+            // Se passou da base
+            if (totalHeight > baseThickness) {
+              // Se está na primeira camada
+              if (totalHeight <= baseThickness + firstLayerHeight) {
+                currentLayer = 2.0; // Camada 2 (primeira camada colorida)
+              } else {
+                // Calcula qual camada está baseado na altura
+                float heightAboveFirst = totalHeight - (baseThickness + firstLayerHeight);
+                currentLayer = 3.0 + floor(heightAboveFirst / layerHeight);
+              }
+            }
+            
+            vLayerNumber = currentLayer;
             
             vec3 pos = position;
             pos.z += height;
@@ -112,13 +132,25 @@ const HeightMap = React.forwardRef<HeightMapRef, {
           uniform vec3 layerColors[5];
           uniform float layerHeights[5];
           uniform int numLayers;
-          varying float vHeight;
+          uniform float baseThickness;
+          uniform float firstLayerHeight;
+          uniform float layerHeight;
+          uniform float baseHeight;
+          varying float vLayerNumber;
           
           void main() {
             vec3 color = layerColors[0];
             
+            // Calcula o número total de camadas
+            float additionalBaseThickness = max(0.0, baseThickness - firstLayerHeight);
+            float additionalBaseLayers = floor(additionalBaseThickness / layerHeight);
+            float totalLayers = floor(baseHeight / layerHeight) + additionalBaseLayers + 1.0; // +1 para a primeira camada
+            
+            // Normaliza o número da camada para o intervalo 0-1
+            float normalizedLayer = (vLayerNumber - 1.0) / totalLayers;
+            
             for(int i = 1; i < 5; i++) {
-              if(i < numLayers && vHeight >= layerHeights[i-1]) {
+              if(i < numLayers && normalizedLayer >= layerHeights[i-1]) {
                 color = layerColors[i];
               }
             }
@@ -132,7 +164,7 @@ const HeightMap = React.forwardRef<HeightMapRef, {
       meshRef.current.material = material;
       console.log('ThreeViewer - Material criado com sucesso');
     }
-  }, [meshRef.current]);
+  }, [texture, baseHeight, baseThickness, layers, isSteppedMode, layerHeight]);
 
   // Atualiza os uniforms quando necessário
   useEffect(() => {
@@ -159,6 +191,8 @@ const HeightMap = React.forwardRef<HeightMapRef, {
         materialRef.current.uniforms.isSteppedMode.value = isSteppedMode;
         materialRef.current.uniforms.layerHeight.value = layerHeight;
         materialRef.current.uniforms.numLayers.value = layers.length;
+        materialRef.current.uniforms.baseThickness.value = baseThickness;
+        materialRef.current.uniforms.firstLayerHeight.value = layerHeight * 2;
         materialRef.current.needsUpdate = true;
 
         console.log('ThreeViewer - Uniforms atualizados:', {
@@ -432,10 +466,20 @@ const ThreeViewer: React.FC<ThreeViewerProps> = ({ imageUrl, baseHeight, baseThi
 
   useEffect(() => {
     if (imageUrl) {
+      console.log('ThreeViewer - Carregando textura da imagem:', imageUrl);
       const loader = new THREE.TextureLoader();
-      loader.load(imageUrl, (loadedTexture) => {
-        setTexture(loadedTexture);
-      });
+      loader.load(
+        imageUrl,
+        (loadedTexture) => {
+          console.log('ThreeViewer - Textura carregada com sucesso');
+          loadedTexture.needsUpdate = true;
+          setTexture(loadedTexture);
+        },
+        undefined,
+        (error) => {
+          console.error('ThreeViewer - Erro ao carregar textura:', error);
+        }
+      );
     }
   }, [imageUrl]);
 
@@ -476,7 +520,7 @@ const ThreeViewer: React.FC<ThreeViewerProps> = ({ imageUrl, baseHeight, baseThi
           <ambientLight intensity={0.5} />
           <pointLight position={[50, 50, 50]} />
           <OrbitControls />
-          {texture && (
+          {texture && texture.image && (
             <HeightMap 
               ref={heightMapRef}
               texture={texture} 
@@ -496,6 +540,7 @@ const ThreeViewer: React.FC<ThreeViewerProps> = ({ imageUrl, baseHeight, baseThi
           layerHeight={layerHeight}
           layers={layers}
           baseHeight={baseHeight}
+          baseThickness={baseThickness}
           onClose={() => setShowExportInfo(false)}
         />
       )}

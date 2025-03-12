@@ -9,6 +9,7 @@ interface LayerColorSliderProps {
   layerHeight: number;
   totalHeight: number;
   imageData?: ImageData;
+  baseThickness: number;
 }
 
 const LayerColorSlider: React.FC<LayerColorSliderProps> = ({ 
@@ -16,7 +17,8 @@ const LayerColorSlider: React.FC<LayerColorSliderProps> = ({
   onChange, 
   layerHeight,
   totalHeight,
-  imageData 
+  imageData,
+  baseThickness
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -36,7 +38,10 @@ const LayerColorSlider: React.FC<LayerColorSliderProps> = ({
   const DRAG_HANDLE_HEIGHT = 10; // Altura da área de arrasto
 
   // Calcula o número total de camadas
-  const totalLayers = Math.floor(totalHeight / layerHeight);
+  const firstLayerHeight = layerHeight * 2;
+  const additionalBaseThickness = Math.max(0, baseThickness - firstLayerHeight);
+  const additionalBaseLayers = Math.floor(additionalBaseThickness / layerHeight);
+  const totalLayers = Math.floor(totalHeight / layerHeight) + additionalBaseLayers + 1; // +1 para a primeira camada
   
   // Calcula a altura de uma camada no canvas
   const layerPixelHeight = SLIDER_HEIGHT / totalLayers;

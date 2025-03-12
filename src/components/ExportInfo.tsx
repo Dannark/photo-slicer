@@ -6,6 +6,7 @@ interface ExportInfoProps {
   layerHeight: number;
   layers: LayerConfig[];
   baseHeight: number;
+  baseThickness: number;
   onClose: () => void;
 }
 
@@ -14,35 +15,33 @@ const ExportInfo: React.FC<ExportInfoProps> = ({
   layerHeight, 
   layers, 
   baseHeight,
+  baseThickness,
   onClose 
 }) => {
   // Calcula as camadas para cada cor
   const getLayerRanges = () => {
     const ranges: { color: string; start: number; end: number }[] = [];
-    let previousEnd = 0;
+    
+    // Calcula o número total de camadas
+    const firstLayerHeight = layerHeight * 2;
+    const additionalBaseThickness = Math.max(0, baseThickness - firstLayerHeight);
+    const additionalBaseLayers = Math.floor(additionalBaseThickness / layerHeight);
+    const totalLayers = Math.floor(baseHeight / layerHeight) + additionalBaseLayers + 1; // +1 para a primeira camada
 
+    let previousEnd = 0;
     layers.forEach((layer, index) => {
-      // Calcula a altura em milímetros até este percentual
-      const heightInMm = (layer.heightPercentage / 100) * baseHeight;
-      // Calcula quantas camadas são necessárias para atingir esta altura
-      const totalLayers = Math.floor(heightInMm / layerHeight);
+      // Calcula o número de camadas para esta cor
+      const layerEndNumber = Math.floor((layer.heightPercentage / 100) * totalLayers);
+      const start = previousEnd + 1;
+      const end = layerEndNumber;
       
-      if (index === 0) {
-        // Para a primeira cor, começamos da camada 1
-        ranges.push({
-          color: layer.color,
-          start: 1,
-          end: totalLayers
-        });
-      } else {
-        // Para as demais cores, começamos da próxima camada após a última cor
-        const previousRange = ranges[index - 1];
-        ranges.push({
-          color: layer.color,
-          start: previousRange.end + 1,
-          end: totalLayers
-        });
-      }
+      ranges.push({
+        color: layer.color,
+        start: start,
+        end: end
+      });
+      
+      previousEnd = end;
     });
 
     return ranges;
