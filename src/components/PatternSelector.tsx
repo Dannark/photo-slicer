@@ -8,97 +8,110 @@ interface PatternSelectorProps {
 
 const PatternSelector: React.FC<PatternSelectorProps> = ({ onSelectPattern, imageData }) => {
   const handlePatternChange = async (pattern: string) => {
-    console.log('Pattern selecionado:', pattern);
-    console.log('ImageData presente?', !!imageData);
-    if (imageData) {
-      console.log('Dimensões da imagem:', imageData.width, 'x', imageData.height);
-      console.log('Tamanho dos dados:', imageData.data.length);
-      console.log('Primeiros pixels:', imageData.data.slice(0, 12));
-    }
-
     let newPattern: LayerConfig[] = [];
 
     if (pattern === 'grayscale-fixed') {
-      // Padrão fixo: preto (3 camadas), cinza escuro (4 camadas), cinza claro (3 camadas), branco (resto)
       newPattern = [
         { color: '#000000', heightPercentage: 10 },
         { color: '#404040', heightPercentage: 33 },
         { color: '#808080', heightPercentage: 66 },
         { color: '#ffffff', heightPercentage: 100 }
       ];
-      console.log('Padrão escala de cinza fixo gerado:', newPattern);
     } else if (pattern === 'grayscale-distributed') {
-      // Padrão distribuído igualmente
       newPattern = [
         { color: '#000000', heightPercentage: 25 },
         { color: '#404040', heightPercentage: 50 },
         { color: '#808080', heightPercentage: 75 },
         { color: '#ffffff', heightPercentage: 100 }
       ];
-      console.log('Padrão escala de cinza distribuído gerado:', newPattern);
     } else if (pattern === 'auto') {
       if (imageData && imageData.data.length > 0) {
-        console.log('Extraindo cores dominantes da imagem...');
-        const colors = extractDominantColors(imageData);
-        console.log('Cores dominantes encontradas:', colors);
-        newPattern = colors.map((color, index) => ({
-          color,
-          heightPercentage: ((index + 1) * 100) / colors.length
-        }));
-        console.log('Padrão colorido gerado:', newPattern);
+        newPattern = posterizeImage(imageData);
       } else {
-        console.log('Não tem imagem ou imageData inválido, usando cores padrão');
         newPattern = [
-          { color: '#FF0000', heightPercentage: 25 }, // Vermelho
-          { color: '#00FF00', heightPercentage: 50 }, // Verde
-          { color: '#0000FF', heightPercentage: 75 }, // Azul
-          { color: '#FFFF00', heightPercentage: 100 } // Amarelo
+          { color: '#000000', heightPercentage: 20 },
+          { color: '#404040', heightPercentage: 40 },
+          { color: '#808080', heightPercentage: 60 },
+          { color: '#C0C0C0', heightPercentage: 80 },
+          { color: '#FFFFFF', heightPercentage: 100 }
         ];
-        console.log('Padrão colorido padrão gerado:', newPattern);
       }
     }
 
-    console.log('Chamando onSelectPattern com o novo padrão:', newPattern);
     onSelectPattern(newPattern);
   };
 
-  // Função para extrair as cores dominantes da imagem
-  const extractDominantColors = (imageData: ImageData): string[] => {
-    console.log('Iniciando extração de cores dominantes...');
-    const colorMap = new Map<string, number>();
+  const posterizeImage = (imageData: ImageData): LayerConfig[] => {
+    // Número de níveis desejados
+    const numLevels = 5;
     
-    // Analisa cada pixel da imagem
+    // Array para armazenar as cores e suas luminâncias
+    type PixelInfo = { r: number; g: number; b: number; luminance: number; count: number };
+    const levels: PixelInfo[] = Array(numLevels).fill(null).map(() => ({ r: 0, g: 0, b: 0, luminance: 0, count: 0 }));
+    
+    // Calcula a luminância de cada pixel e agrupa nos níveis
     for (let i = 0; i < imageData.data.length; i += 4) {
       const r = imageData.data[i];
       const g = imageData.data[i + 1];
       const b = imageData.data[i + 2];
       
-      // Reduz a precisão das cores para agrupar cores similares
-      const rKey = Math.round(r/32);  // Reduz para 8 níveis (256/32)
-      const gKey = Math.round(g/32);
-      const bKey = Math.round(b/32);
+      // Calcula a luminância
+      const luminance = 0.299 * r + 0.587 * g + 0.114 * b;
       
-      // Cria uma chave única para esta cor
-      const colorKey = `${rKey},${gKey},${bKey}`;
-      colorMap.set(colorKey, (colorMap.get(colorKey) || 0) + 1);
+      // Determina o nível baseado na luminância
+      const levelIndex = Math.min(Math.floor((luminance / 255) * numLevels), numLevels - 1);
+      
+      // Acumula as cores para fazer a média depois
+      levels[levelIndex].r += r;
+      levels[levelIndex].g += g;
+      levels[levelIndex].b += b;
+      levels[levelIndex].luminance += luminance;
+      levels[levelIndex].count++;
     }
+    
+    // Calcula a média das cores para cada nível
+    const pattern: LayerConfig[] = levels.map((level, index) => {
+      if (level.count === 0) {
+        // Se não houver pixels neste nível, use um valor interpolado
+        const gray = Math.round((index / (numLevels - 1)) * 255);
+        return {
+          color: `#${gray.toString(16).padStart(2, '0').repeat(3)}`,
+          heightPercentage: ((index + 1) * 100) / numLevels
+        };
+      }
+      
+      // Calcula a média das cores
+      const r = Math.round(level.r / level.count);
+      const g = Math.round(level.g / level.count);
+      const b = Math.round(level.b / level.count);
+      
+      // Converte para hexadecimal
+      const color = `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+      
+      return {
+        color,
+        heightPercentage: ((index + 1) * 100) / numLevels
+      };
+    });
+    
+    // Ordena o padrão pela luminância (do mais escuro para o mais claro)
+    pattern.sort((a, b) => {
+      const getLuminance = (hex: string) => {
+        const r = parseInt(hex.slice(1, 3), 16);
+        const g = parseInt(hex.slice(3, 5), 16);
+        const b = parseInt(hex.slice(5, 7), 16);
+        return 0.299 * r + 0.587 * g + 0.114 * b;
+      };
+      
+      return getLuminance(a.color) - getLuminance(b.color);
+    });
+    
+    // Ajusta as porcentagens após a ordenação
+    pattern.forEach((layer, index) => {
+      layer.heightPercentage = ((index + 1) * 100) / numLevels;
+    });
 
-    console.log(`Encontradas ${colorMap.size} cores únicas após agrupamento`);
-
-    // Ordena as cores por frequência e pega as 4 mais comuns
-    const sortedColors = Array.from(colorMap.entries())
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 4)
-      .map(([color]) => {
-        // Converte de volta para RGB
-        const [r, g, b] = color.split(',').map(n => parseInt(n) * 32);
-        const hex = `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
-        console.log(`Cor convertida: RGB(${r},${g},${b}) -> ${hex}`);
-        return hex;
-      });
-
-    console.log('Cores dominantes extraídas:', sortedColors);
-    return sortedColors;
+    return pattern;
   };
 
   return (
@@ -109,7 +122,7 @@ const PatternSelector: React.FC<PatternSelectorProps> = ({ onSelectPattern, imag
       >
         <option value="grayscale-fixed">Escala de Cinza (Padrão)</option>
         <option value="grayscale-distributed">Escala de Cinza (Distribuída)</option>
-        <option value="auto">Cores dominantes</option>
+        <option value="auto">Posterizado</option>
       </select>
     </div>
   );

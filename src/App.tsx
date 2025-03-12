@@ -53,9 +53,7 @@ function App() {
       <div className="container">
         <header className="App-header">
           <h1>Photo Slicer</h1>
-          {!imageUrl && (
-            <ImageUploader onImageUpload={handleImageUpload} />
-          )}
+          <ImageUploader onImageUpload={handleImageUpload} imageLoaded={!!imageUrl} />
         </header>
 
         {imageUrl && (

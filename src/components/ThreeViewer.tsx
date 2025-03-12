@@ -5,9 +5,6 @@ import * as THREE from 'three';
 import { STLExporter } from 'three-stdlib';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils';
 import { LayerConfig } from './HeightControls';
-import ImageUploader from './ImageUploader';
-import HeightControls from './HeightControls';
-import LayerColorSlider from './LayerColorSlider';
 
 // Constantes de dimensão
 const MODEL_MAX_SIZE = 100;  // Dimensão máxima em mm
@@ -430,7 +427,6 @@ const ThreeViewer: React.FC<ThreeViewerProps> = ({ imageUrl, baseHeight, baseThi
   const [texture, setTexture] = React.useState<THREE.Texture | null>(null);
   const [isSteppedMode, setIsSteppedMode] = React.useState(false);
   const heightMapRef = useRef<HeightMapRef>(null);
-  const [imageData, setImageData] = useState<ImageData | undefined>(undefined);
 
   useEffect(() => {
     if (imageUrl) {
@@ -441,51 +437,19 @@ const ThreeViewer: React.FC<ThreeViewerProps> = ({ imageUrl, baseHeight, baseThi
     }
   }, [imageUrl]);
 
-  const handleImageUpload = (file: File) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const img = new Image();
-      img.onload = () => {
-        // Cria um canvas temporário para extrair o imageData
-        const tempCanvas = document.createElement('canvas');
-        tempCanvas.width = img.width;
-        tempCanvas.height = img.height;
-        const tempCtx = tempCanvas.getContext('2d');
-        if (tempCtx) {
-          tempCtx.drawImage(img, 0, 0);
-          const newImageData = tempCtx.getImageData(0, 0, img.width, img.height);
-          console.log('ThreeViewer - ImageData criado:', {
-            width: newImageData.width,
-            height: newImageData.height,
-            dataLength: newImageData.data.length,
-            primeiroPixel: `R:${newImageData.data[0]},G:${newImageData.data[1]},B:${newImageData.data[2]}`
-          });
-          setImageData(newImageData);
-
-          // Cria a URL para a textura
-          const url = URL.createObjectURL(file);
-          const loader = new THREE.TextureLoader();
-          loader.load(url, (loadedTexture) => {
-            setTexture(loadedTexture);
-            URL.revokeObjectURL(url);
-          });
-        }
-      };
-      img.src = e.target?.result as string;
-    };
-    reader.readAsDataURL(file);
-  };
-
   const handleExport = () => {
     if (heightMapRef.current) {
       heightMapRef.current.exportToSTL();
     }
   };
 
+  if (!imageUrl) {
+    return null;
+  }
+
   return (
     <div className="three-viewer">
       <div className="viewer-controls">
-        <ImageUploader onImageUpload={handleImageUpload} />
         <button
           className={`preview-mode-button ${isSteppedMode ? 'active' : ''}`}
           onClick={() => setIsSteppedMode(!isSteppedMode)}

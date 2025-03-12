@@ -1,4 +1,4 @@
-import React, { useCallback, useState, useRef } from 'react';
+import React, { useCallback, useState, useRef, useEffect } from 'react';
 
 interface ImageUploaderProps {
   onImageUpload: (file: File) => void;
@@ -8,51 +8,61 @@ interface ImageUploaderProps {
 const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageUpload, imageLoaded }) => {
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const dragCounter = useRef(0);
 
   const handleFile = (file: File) => {
     if (file && file.type.startsWith('image/')) {
       onImageUpload(file);
+      setIsDragging(false);
+      dragCounter.current = 0;
     }
   };
 
-  const handleDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+  const handleDragEnter = useCallback((e: DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    setIsDragging(false);
-    
-    const file = e.dataTransfer.files[0];
-    if (file) {
-      handleFile(file);
+    dragCounter.current++;
+    if (e.dataTransfer?.items && e.dataTransfer.items.length > 0) {
+      setIsDragging(true);
     }
   }, []);
 
-  const handleDragOver = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+  const handleDragLeave = useCallback((e: DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (!isDragging) {
-      setIsDragging(true);
-    }
-  }, [isDragging]);
-
-  const handleDragEnter = useCallback((e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (!isDragging) {
-      setIsDragging(true);
-    }
-  }, [isDragging]);
-
-  const handleDragLeave = useCallback((e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = e.clientX;
-    const y = e.clientY;
-
-    // Verifica se o mouse realmente saiu da área
-    if (x <= rect.left || x >= rect.right || y <= rect.top || y >= rect.bottom) {
+    dragCounter.current--;
+    if (dragCounter.current === 0) {
       setIsDragging(false);
     }
+  }, []);
+
+  const handleDragOver = useCallback((e: DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  }, []);
+
+  const handleDrop = useCallback((e: DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const dt = e.dataTransfer;
+    if (dt?.files && dt.files.length > 0) {
+      handleFile(dt.files[0]);
+    }
+  }, []);
+
+  useEffect(() => {
+    window.addEventListener('dragenter', handleDragEnter);
+    window.addEventListener('dragleave', handleDragLeave);
+    window.addEventListener('dragover', handleDragOver);
+    window.addEventListener('drop', handleDrop);
+
+    return () => {
+      window.removeEventListener('dragenter', handleDragEnter);
+      window.removeEventListener('dragleave', handleDragLeave);
+      window.removeEventListener('dragover', handleDragOver);
+      window.removeEventListener('drop', handleDrop);
+    };
   }, []);
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -66,30 +76,55 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageUpload, imageLoade
     fileInputRef.current?.click();
   };
 
-  if (imageLoaded) {
-    return null;
-  }
-
   return (
-    <div 
-      className={`image-uploader ${isDragging ? 'drag-active' : ''}`}
-      onDrop={handleDrop}
-      onDragOver={handleDragOver}
-      onDragEnter={handleDragEnter}
-      onDragLeave={handleDragLeave}
-    >
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/*"
-        onChange={handleImageUpload}
-        style={{ display: 'none' }}
-      />
-      <div className="upload-content">
-        <button className="upload-button" onClick={handleButtonClick}>Escolher arquivo</button>
-        <p>ou arraste e solte uma imagem aqui</p>
+    <>
+      <div className="image-uploader">
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          onChange={handleImageUpload}
+          style={{ display: 'none' }}
+        />
+        <div className="upload-content">
+          {imageLoaded ? (
+            <button className="upload-button compact" onClick={handleButtonClick}>
+              Trocar imagem
+            </button>
+          ) : (
+            <>
+              <button className="upload-button" onClick={handleButtonClick}>
+                Escolher arquivo
+              </button>
+              <p>ou arraste uma imagem</p>
+            </>
+          )}
+        </div>
       </div>
-    </div>
+      {isDragging && (
+        <div 
+          className="drag-overlay"
+          onDragEnter={e => e.preventDefault()}
+          onDragOver={e => e.preventDefault()}
+          onDrop={e => {
+            e.preventDefault();
+            e.stopPropagation();
+            const dt = e.dataTransfer;
+            if (dt?.files && dt.files.length > 0) {
+              handleFile(dt.files[0]);
+            }
+          }}
+        >
+          <div className="drop-zone">
+            <div className="drop-zone-border">
+              <div className="drop-zone-content">
+                <p>Solte a imagem aqui</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 };
 
