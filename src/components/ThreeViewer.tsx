@@ -5,6 +5,7 @@ import * as THREE from 'three';
 import { STLExporter } from 'three-stdlib';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils';
 import { LayerConfig } from './HeightControls';
+import ExportInfo from './ExportInfo';
 
 // Constantes de dimensão
 const MODEL_MAX_SIZE = 100;  // Dimensão máxima em mm
@@ -426,6 +427,7 @@ const HeightMap = React.forwardRef<HeightMapRef, {
 const ThreeViewer: React.FC<ThreeViewerProps> = ({ imageUrl, baseHeight, baseThickness, layers, resolution, layerHeight }) => {
   const [texture, setTexture] = React.useState<THREE.Texture | null>(null);
   const [isSteppedMode, setIsSteppedMode] = React.useState(false);
+  const [showExportInfo, setShowExportInfo] = React.useState(false);
   const heightMapRef = useRef<HeightMapRef>(null);
 
   useEffect(() => {
@@ -440,6 +442,7 @@ const ThreeViewer: React.FC<ThreeViewerProps> = ({ imageUrl, baseHeight, baseThi
   const handleExport = () => {
     if (heightMapRef.current) {
       heightMapRef.current.exportToSTL();
+      setShowExportInfo(true);
     }
   };
 
@@ -455,6 +458,12 @@ const ThreeViewer: React.FC<ThreeViewerProps> = ({ imageUrl, baseHeight, baseThi
           onClick={() => setIsSteppedMode(!isSteppedMode)}
         >
           {isSteppedMode ? 'Visualização Suave' : 'Visualização em Camadas'}
+        </button>
+        <button
+          className="preview-mode-button"
+          onClick={() => setShowExportInfo(true)}
+        >
+          Informações de Fatiamento
         </button>
         {texture && (
           <button className="export-button" onClick={handleExport}>
@@ -481,6 +490,15 @@ const ThreeViewer: React.FC<ThreeViewerProps> = ({ imageUrl, baseHeight, baseThi
           )}
         </Canvas>
       </div>
+      {showExportInfo && (
+        <ExportInfo
+          firstLayerHeight={layerHeight * 2}
+          layerHeight={layerHeight}
+          layers={layers}
+          baseHeight={baseHeight}
+          onClose={() => setShowExportInfo(false)}
+        />
+      )}
     </div>
   );
 };
