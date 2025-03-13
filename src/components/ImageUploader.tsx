@@ -49,7 +49,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageUpload, imageLoade
     if (dt?.files && dt.files.length > 0) {
       handleFile(dt.files[0]);
     }
-  }, []);
+  }, [handleFile]);
 
   useEffect(() => {
     window.addEventListener('dragenter', handleDragEnter);
@@ -63,7 +63,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageUpload, imageLoade
       window.removeEventListener('dragover', handleDragOver);
       window.removeEventListener('drop', handleDrop);
     };
-  }, []);
+  }, [handleDragEnter, handleDragLeave, handleDragOver, handleDrop]);
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];

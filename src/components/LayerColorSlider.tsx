@@ -178,10 +178,11 @@ const LayerColorSlider: React.FC<LayerColorSliderProps> = ({
     canvas.width = CANVAS_WIDTH;
     canvas.height = CANVAS_HEIGHT;
     drawSlider();
-  }, [layers, hoveredY, isDragging]);
+  }, [layers, hoveredY, isDragging, drawSlider]);
 
   // Adiciona um useEffect para monitorar o imageData
   useEffect(() => {
+    if (!imageData) return;
     console.log('LayerColorSlider - imageData atualizado:', {
       presente: !!imageData,
       dimensoes: imageData ? `${imageData.width}x${imageData.height}` : 'N/A',
@@ -191,9 +192,8 @@ const LayerColorSlider: React.FC<LayerColorSliderProps> = ({
   }, [imageData]);
 
   useEffect(() => {
-    console.log('LayerColorSlider - Layers atualizados:', layers);
     drawSlider();
-  }, [layers]);
+  }, [layers, drawSlider]);
 
   const getCanvasCoordinates = (e: React.MouseEvent) => {
     const canvas = canvasRef.current;

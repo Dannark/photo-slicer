@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { Canvas, useThree } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import * as THREE from 'three';
@@ -206,7 +206,7 @@ const HeightMap = React.forwardRef<HeightMapRef, {
         console.error('Erro ao atualizar uniforms:', error);
       }
     }
-  }, [baseHeight, layers, isSteppedMode, layerHeight, texture]);
+  }, [texture, baseHeight, baseThickness, layers, isSteppedMode, layerHeight]);
 
   const createGeometryWithHeight = () => {
     // Calcula as dimensões baseadas na proporção da imagem
