@@ -12,10 +12,10 @@ const PatternSelector: React.FC<PatternSelectorProps> = ({ onSelectPattern, imag
 
     if (pattern === 'grayscale-fixed') {
       newPattern = [
-        { color: '#000000', heightPercentage: 10 },
-        { color: '#404040', heightPercentage: 33 },
-        { color: '#808080', heightPercentage: 66 },
-        { color: '#ffffff', heightPercentage: 100 }
+        { color: '#000000', heightPercentage: 10 },   // Preto
+        { color: '#666666', heightPercentage: 33 },  // Cinza escuro
+        { color: '#CCCCCC', heightPercentage: 66 },  // Cinza claro
+        { color: '#FFFFFF', heightPercentage: 100 }  // Branco
       ];
     } else if (pattern === 'grayscale-distributed') {
       newPattern = [

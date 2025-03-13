@@ -1,6 +1,7 @@
 {
-  "short_name": "React App",
-  "name": "Create React App Sample",
+  "short_name": "Photo Slicer",
+  "name": "Photo Slicer - Multi-color 3D Model Generator",
+  "description": "Convert images into multi-color 3D models for 3D printing",
   "icons": [
     {
       "src": "favicon.ico",
@@ -20,6 +21,9 @@
   ],
   "start_url": ".",
   "display": "standalone",
-  "theme_color": "#000000",
-  "background_color": "#ffffff"
+  "theme_color": "#61dafb",
+  "background_color": "#282c34",
+  "categories": ["productivity", "utilities", "3d printing"],
+  "screenshots": [],
+  "orientation": "any"
 }
