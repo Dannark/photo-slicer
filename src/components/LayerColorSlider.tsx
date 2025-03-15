@@ -29,6 +29,7 @@ const LayerColorSlider: React.FC<LayerColorSliderProps> = ({
   const [selectedDividerIndex, setSelectedDividerIndex] = useState<number | null>(null);
   const [isOverDivider, setIsOverDivider] = useState(false);
   const [lastValidLayer, setLastValidLayer] = useState<number | null>(null);
+  const [isAddingNewColor, setIsAddingNewColor] = useState(false);
 
   // Constantes
   const CANVAS_HEIGHT = 400;
@@ -37,6 +38,10 @@ const LayerColorSlider: React.FC<LayerColorSliderProps> = ({
   const SLIDER_HEIGHT = CANVAS_HEIGHT - 60;
   const BUTTON_RADIUS = 8;
   const DRAG_HANDLE_HEIGHT = 10; // Altura da área de arrasto
+  const COLUMN_WIDTH = (CANVAS_WIDTH - 50) / 2; // 50px para espaço entre colunas e bordas
+  const LEFT_COLUMN_X = 10;
+  const RIGHT_COLUMN_X = CANVAS_WIDTH - COLUMN_WIDTH - 10;
+  const CENTER_X = LEFT_COLUMN_X + COLUMN_WIDTH + 15; // Ponto central entre as colunas
 
   // Calcula o número total de camadas
   const firstLayerHeight = layerHeight * 2;
@@ -50,7 +55,7 @@ const LayerColorSlider: React.FC<LayerColorSliderProps> = ({
   const layerPixelHeight = SLIDER_HEIGHT / totalLayers;
 
   // Calcula as posições das divisórias entre cores
-  const getDividerPositions = () => {
+  const getDividerPositions = (): number[] => {
     const positions: number[] = [];
     let currentY = SLIDER_START_Y;
     let accumulatedLayers = 0;
@@ -68,6 +73,30 @@ const LayerColorSlider: React.FC<LayerColorSliderProps> = ({
     return positions;
   };
 
+  // Função para calcular a cor intermediária
+  const interpolateColor = (color1: string, color2: string, factor: number): string => {
+    // Remove o # se existir
+    const c1 = color1.replace('#', '');
+    const c2 = color2.replace('#', '');
+    
+    // Converte hex para RGB
+    const r1 = parseInt(c1.substr(0, 2), 16);
+    const g1 = parseInt(c1.substr(2, 2), 16);
+    const b1 = parseInt(c1.substr(4, 2), 16);
+    
+    const r2 = parseInt(c2.substr(0, 2), 16);
+    const g2 = parseInt(c2.substr(2, 2), 16);
+    const b2 = parseInt(c2.substr(4, 2), 16);
+    
+    // Interpola cada componente
+    const r = Math.round(r1 + (r2 - r1) * factor);
+    const g = Math.round(g1 + (g2 - g1) * factor);
+    const b = Math.round(b1 + (b2 - b1) * factor);
+    
+    // Converte de volta para hex
+    return `#${(r << 16 | g << 8 | b).toString(16).padStart(6, '0')}`;
+  };
+
   const drawSlider = () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -82,43 +111,84 @@ const LayerColorSlider: React.FC<LayerColorSliderProps> = ({
     ctx.fillStyle = '#1a1a1a';
     ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
-    // Desenha o slider principal
+    // Desenha o slider - Coluna Esquerda (visualização original)
     let currentY = SLIDER_START_Y;
     let accumulatedLayers = 0;
 
     layers.forEach((layer, index) => {
-      // Calcula o número de camadas para esta seção
       const nextAccumulatedLayers = index < layers.length - 1 
-        ? Math.floor((layer.heightPercentage / 100) * totalLayers)
+        ? Math.floor((layers[index].heightPercentage / 100) * totalLayers)
         : totalLayers;
       const layerCount = nextAccumulatedLayers - accumulatedLayers;
       const sectionHeight = layerCount * layerPixelHeight;
 
-      // Desenha a seção da cor
+      // Desenha a seção com cor sólida (visualização original)
       ctx.fillStyle = layer.color;
-      ctx.fillRect(10, currentY, CANVAS_WIDTH - 40, sectionHeight);
-
+      ctx.fillRect(LEFT_COLUMN_X, currentY, COLUMN_WIDTH, sectionHeight);
+      
       // Desenha a borda
       ctx.strokeStyle = '#333';
       ctx.lineWidth = 1;
-      ctx.strokeRect(10, currentY, CANVAS_WIDTH - 40, sectionHeight);
+      ctx.strokeRect(LEFT_COLUMN_X, currentY, COLUMN_WIDTH, sectionHeight);
 
       currentY += sectionHeight;
       accumulatedLayers = nextAccumulatedLayers;
     });
 
-    // Desenha linhas tracejadas para cada camada (DEPOIS das cores)
-    ctx.strokeStyle = 'rgba(0, 0, 0, 0.4)'; // Vermelho puro
-    ctx.lineWidth = 1; // Linha mais grossa
-    ctx.setLineDash([4, 4]); // Padrão tracejado mais visível
+    // Reset das variáveis para a coluna direita
+    currentY = SLIDER_START_Y;
+    accumulatedLayers = 0;
+    let previousColor = '#000000'; // Cor inicial (preto)
+
+    // Desenha o slider - Coluna Direita (visualização com TD)
+    layers.forEach((layer, index) => {
+      const nextAccumulatedLayers = index < layers.length - 1 
+        ? Math.floor((layers[index].heightPercentage / 100) * totalLayers)
+        : totalLayers;
+      const layerCount = nextAccumulatedLayers - accumulatedLayers;
+      const sectionHeight = layerCount * layerPixelHeight;
+
+      // Calcula quantas camadas são necessárias para atingir a cor completa baseado no TD
+      const layersForFullColor = Math.ceil(layer.td / layerHeight);
+      
+      // Desenha a transição de cor
+      for (let i = 0; i < layerCount; i++) {
+        const y = currentY + (i * layerPixelHeight);
+        const progress = Math.min(1, i / layersForFullColor);
+        const currentColor = interpolateColor(previousColor, layer.color, progress);
+        
+        ctx.fillStyle = currentColor;
+        ctx.fillRect(RIGHT_COLUMN_X, y, COLUMN_WIDTH, layerPixelHeight);
+        
+        // Desenha a borda
+        ctx.strokeStyle = '#333';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(RIGHT_COLUMN_X, y, COLUMN_WIDTH, layerPixelHeight);
+      }
+
+      previousColor = layer.color;
+      currentY += sectionHeight;
+      accumulatedLayers = nextAccumulatedLayers;
+    });
+
+    // Desenha linhas tracejadas para cada camada
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([4, 4]);
     for (let i = 0; i <= totalLayers; i++) {
       const y = SLIDER_START_Y + (i * layerPixelHeight);
+      // Linha para coluna esquerda
       ctx.beginPath();
-      ctx.moveTo(10, y);
-      ctx.lineTo(CANVAS_WIDTH - 30, y);
+      ctx.moveTo(LEFT_COLUMN_X, y);
+      ctx.lineTo(LEFT_COLUMN_X + COLUMN_WIDTH, y);
+      ctx.stroke();
+      // Linha para coluna direita
+      ctx.beginPath();
+      ctx.moveTo(RIGHT_COLUMN_X, y);
+      ctx.lineTo(RIGHT_COLUMN_X + COLUMN_WIDTH, y);
       ctx.stroke();
     }
-    ctx.setLineDash([]); // Reset linha tracejada
+    ctx.setLineDash([]);
 
     // Reset das variáveis para os botões
     currentY = SLIDER_START_Y;
@@ -135,7 +205,7 @@ const LayerColorSlider: React.FC<LayerColorSliderProps> = ({
       // Desenha o botão de remover apenas se o mouse estiver sobre esta seção
       if (layers.length > 1 && hoveredY !== null && 
           hoveredY >= currentY && hoveredY <= currentY + sectionHeight) {
-        const buttonX = CANVAS_WIDTH - 20;
+        const buttonX = CENTER_X;
         const buttonY = currentY + sectionHeight / 2;
         
         ctx.beginPath();
@@ -154,7 +224,8 @@ const LayerColorSlider: React.FC<LayerColorSliderProps> = ({
       if (index < layers.length - 1) {
         const dividerY = currentY + sectionHeight;
         ctx.fillStyle = isDragging === index ? 'rgba(97, 218, 251, 0.3)' : 'rgba(255, 255, 255, 0.1)';
-        ctx.fillRect(10, dividerY - DRAG_HANDLE_HEIGHT/2, CANVAS_WIDTH - 40, DRAG_HANDLE_HEIGHT);
+        // Estende a área de arrasto para cobrir ambas as colunas
+        ctx.fillRect(LEFT_COLUMN_X, dividerY - DRAG_HANDLE_HEIGHT/2, CANVAS_WIDTH - 20, DRAG_HANDLE_HEIGHT);
 
         // Verifica se é possível adicionar uma cor nesta divisória
         const currentLayerCount = Math.floor((layers[index].heightPercentage / 100) * totalLayers);
@@ -165,7 +236,7 @@ const LayerColorSlider: React.FC<LayerColorSliderProps> = ({
             hoveredY !== null && 
             Math.abs(hoveredY - dividerY) <= DRAG_HANDLE_HEIGHT/2) {
           // Desenha o botão de adicionar na divisória
-          const buttonX = CANVAS_WIDTH - 20;
+          const buttonX = CENTER_X;
           
           ctx.beginPath();
           ctx.arc(buttonX, dividerY, BUTTON_RADIUS, 0, Math.PI * 2);
@@ -191,10 +262,8 @@ const LayerColorSlider: React.FC<LayerColorSliderProps> = ({
         
         let tooltipText;
         if (isOverDivider && index < layers.length - 1) {
-          // Se estiver sobre uma divisória, mostra a posição exata
           tooltipText = `Layer ${endLayer}`;
         } else {
-          // Caso contrário, mostra o range de camadas
           tooltipText = `Layers ${startLayer}-${endLayer}`;
         }
         
@@ -332,7 +401,7 @@ const LayerColorSlider: React.FC<LayerColorSliderProps> = ({
         // Se for duplo clique, abre o color picker para esta camada
         if (e.detail === 2) {
           setSelectedDividerIndex(i);
-          console.log('selectedDividerIndex', i)
+          setIsAddingNewColor(false);
           setShowColorPicker(true);
           return;
         }
@@ -344,7 +413,7 @@ const LayerColorSlider: React.FC<LayerColorSliderProps> = ({
       if (hoveredY !== null && 
           hoveredY >= currentY && 
           hoveredY <= currentY + sectionHeight &&
-          Math.hypot(x - (CANVAS_WIDTH - 20), y - buttonY) <= BUTTON_RADIUS) {
+          Math.hypot(x - CENTER_X, y - buttonY) <= BUTTON_RADIUS) {
         if (layers.length > 1) {
           const newLayers = [...layers];
           newLayers.splice(i, 1);
@@ -378,8 +447,9 @@ const LayerColorSlider: React.FC<LayerColorSliderProps> = ({
 
         if ((currentLayerCount > 1 || nextLayerCount > 1) && 
             Math.abs(y - dividerY) <= DRAG_HANDLE_HEIGHT/2 &&
-            Math.hypot(x - (CANVAS_WIDTH - 20), y - dividerY) <= BUTTON_RADIUS) {
+            Math.hypot(x - CENTER_X, y - dividerY) <= BUTTON_RADIUS) {
           setSelectedDividerIndex(i);
+          setIsAddingNewColor(true);
           setShowColorPicker(true);
           return;
         }
@@ -410,53 +480,64 @@ const LayerColorSlider: React.FC<LayerColorSliderProps> = ({
 
   const handleColorSelect = (color: string, td: number) => {
     if (selectedDividerIndex !== null) {
-      const newLayers = [...layers];
-      
-      // Se estamos editando uma cor existente (duplo clique)
-      if (selectedDividerIndex < layers.length) {
-        newLayers[selectedDividerIndex].color = color;
-        newLayers[selectedDividerIndex].td = td;
+      // Se estamos editando uma cor existente
+      if (!isAddingNewColor) {
+        const newLayers = [...layers];
+        newLayers[selectedDividerIndex] = {
+          ...newLayers[selectedDividerIndex],
+          color,
+          td
+        };
+        onChange(newLayers);
       } else {
-        // Lógica existente para adicionar nova cor entre camadas
+        // Estamos adicionando uma nova cor entre camadas existentes
         const currentIndex = selectedDividerIndex;
         
-        // Calcula o número de camadas disponíveis
-        const currentLayerCount = Math.floor((layers[currentIndex].heightPercentage / 100) * totalLayers);
-        const nextLayerCount = Math.floor((layers[currentIndex + 1].heightPercentage / 100) * totalLayers) - 
-                           Math.floor((layers[currentIndex].heightPercentage / 100) * totalLayers);
+        // Calcula as porcentagens
+        const currentLayerPercentage = layers[currentIndex].heightPercentage;
+        const nextLayerPercentage = layers[currentIndex + 1].heightPercentage;
+        const availablePercentage = nextLayerPercentage - currentLayerPercentage;
         
-        // Decide de qual cor "pegar" uma camada
-        let sourceIndex = currentLayerCount > 1 ? currentIndex : currentIndex + 1;
+        // Cria um novo array de camadas
+        const newLayers = [...layers];
         
-        // Calcula a nova porcentagem para uma camada
-        const oneLayerPercentage = (1 / totalLayers) * 100;
+        // Ajusta a porcentagem da camada atual
+        newLayers[currentIndex] = {
+          ...layers[currentIndex],
+          heightPercentage: currentLayerPercentage
+        };
         
-        // Ajusta as porcentagens
-        if (sourceIndex === currentIndex) {
-          // Reduz uma camada da cor atual
-          newLayers[currentIndex].heightPercentage -= oneLayerPercentage;
-        } else {
-          // Reduz uma camada da próxima cor
-          newLayers[currentIndex + 1].heightPercentage -= oneLayerPercentage;
-          
-          // Ajusta as porcentagens das cores subsequentes
-          for (let i = currentIndex + 2; i < newLayers.length; i++) {
-            newLayers[i].heightPercentage -= oneLayerPercentage;
-          }
-        }
-        
-        // Insere a nova cor
-        newLayers.splice(currentIndex + 1, 0, {
+        // Cria a nova camada com metade do espaço disponível
+        const newLayer = {
           color,
           td,
-          heightPercentage: layers[currentIndex].heightPercentage + oneLayerPercentage
-        });
+          heightPercentage: currentLayerPercentage + (availablePercentage / 2)
+        };
+        
+        // Ajusta a porcentagem da próxima camada
+        newLayers[currentIndex + 1] = {
+          ...layers[currentIndex + 1],
+          heightPercentage: nextLayerPercentage
+        };
+        
+        // Insere a nova camada após a camada atual
+        newLayers.splice(currentIndex + 1, 0, newLayer);
+        
+        // Ajusta as porcentagens das camadas subsequentes
+        for (let i = currentIndex + 2; i < newLayers.length; i++) {
+          newLayers[i] = {
+            ...newLayers[i],
+            heightPercentage: layers[i - 1].heightPercentage
+          };
+        }
+        
+        console.log('Layers antes:', layers.length, 'Layers depois:', newLayers.length);
+        onChange(newLayers);
       }
-      
-      onChange(newLayers);
     }
     setShowColorPicker(false);
     setSelectedDividerIndex(null);
+    setIsAddingNewColor(false);
   };
 
   const handlePatternSelect = (newLayers: LayerConfig[]) => {
@@ -484,9 +565,13 @@ const LayerColorSlider: React.FC<LayerColorSliderProps> = ({
       {showColorPicker && selectedDividerIndex !== null && (
         <ColorPicker
           onColorSelect={(color, td) => handleColorSelect(color, td)}
-          onClose={() => setShowColorPicker(false)}
-          initialColor={layers[selectedDividerIndex].color}
-          initialTd={layers[selectedDividerIndex].td}
+          onClose={() => {
+            setShowColorPicker(false);
+            setSelectedDividerIndex(null);
+            setIsAddingNewColor(false);
+          }}
+          initialColor={!isAddingNewColor ? layers[selectedDividerIndex].color : undefined}
+          initialTd={!isAddingNewColor ? layers[selectedDividerIndex].td : undefined}
         />
       )}
     </div>
