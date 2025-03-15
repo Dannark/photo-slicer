@@ -89,14 +89,14 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageUpload, imageLoade
         <div className="upload-content">
           {imageLoaded ? (
             <button className="upload-button compact" onClick={handleButtonClick}>
-              Trocar imagem
+              Change image
             </button>
           ) : (
             <>
               <button className="upload-button" onClick={handleButtonClick}>
-                Escolher arquivo
+                Choose file
               </button>
-              <p>ou arraste uma imagem</p>
+              <p>or drag an image</p>
             </>
           )}
         </div>
@@ -118,7 +118,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ onImageUpload, imageLoade
           <div className="drop-zone">
             <div className="drop-zone-border">
               <div className="drop-zone-content">
-                <p>Solte a imagem aqui</p>
+                <p>Drop image here</p>
               </div>
             </div>
           </div>

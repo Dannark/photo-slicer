@@ -44,7 +44,7 @@ function App() {
   };
 
   const handleLayersChange = (newLayers: LayerConfig[]) => {
-    console.log('App - Layers atualizados:', newLayers);
+    // console.log('App - Layers atualizados:', newLayers);
     setLayers(newLayers);
   };
 
@@ -62,7 +62,7 @@ function App() {
                 rel="noopener noreferrer"
                 className="donate-button"
               >
-                ☕ Me pague um café
+                ☕ Buy me a coffee
               </a>
             </div>
           </div>

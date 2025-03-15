@@ -52,16 +52,16 @@ const ExportInfo: React.FC<ExportInfoProps> = ({
   return (
     <div className="export-info-overlay">
       <div className="export-info-container">
-        <h2>Informações de Fatiamento</h2>
+        <h2>Slicing Information</h2>
         
         <div className="export-info-section">
-          <h3>Configurações de Altura</h3>
-          <p>Primeira camada: {firstLayerHeight.toFixed(2)}mm</p>
-          <p>Demais camadas: {layerHeight.toFixed(2)}mm</p>
+          <h3>Height Settings</h3>
+          <p>First layer: {firstLayerHeight.toFixed(2)}mm</p>
+          <p>Other layers: {layerHeight.toFixed(2)}mm</p>
         </div>
 
         <div className="export-info-section">
-          <h3>Sequência de Impressão</h3>
+          <h3>Print Sequence</h3>
           <div className="color-sequence">
             {layerRanges.map((range, index) => (
               <div key={index} className="color-range">
@@ -71,8 +71,8 @@ const ExportInfo: React.FC<ExportInfoProps> = ({
                 />
                 <p>
                   {index === 0 
-                    ? `Iniciar com ${range.color} (camadas ${range.start}-${range.end})`
-                    : `Trocar para ${range.color} na camada ${range.start} (até ${range.end})`
+                    ? `Start with ${range.color} (layers ${range.start}-${range.end})`
+                    : `Switch to ${range.color} at layer ${range.start} (until ${range.end})`
                   }
                 </p>
               </div>
@@ -81,7 +81,7 @@ const ExportInfo: React.FC<ExportInfoProps> = ({
         </div>
 
         <button className="export-info-close" onClick={onClose}>
-          Fechar
+          Close
         </button>
       </div>
     </div>

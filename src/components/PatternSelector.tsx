@@ -120,9 +120,9 @@ const PatternSelector: React.FC<PatternSelectorProps> = ({ onSelectPattern, imag
         onChange={(e) => handlePatternChange(e.target.value)}
         className="pattern-select"
       >
-        <option value="grayscale-fixed">Escala de Cinza (Padrão)</option>
-        <option value="grayscale-distributed">Escala de Cinza (Distribuída)</option>
-        <option value="auto">Posterizado</option>
+        <option value="grayscale-fixed">Grayscale (Default)</option>
+        <option value="grayscale-distributed">Grayscale (Distributed)</option>
+        <option value="auto">Posterized</option>
       </select>
     </div>
   );

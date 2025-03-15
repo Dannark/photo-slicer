@@ -27,10 +27,10 @@ const ColorPicker: React.FC<ColorPickerProps> = ({ onColorSelect, onClose }) => 
         />
         <div className="color-picker-buttons">
           <button onClick={handleConfirm} className="color-picker-confirm">
-            Confirmar
+            Confirm
           </button>
           <button onClick={onClose} className="color-picker-cancel">
-            Cancelar
+            Cancel
           </button>
         </div>
       </div>

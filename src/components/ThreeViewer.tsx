@@ -56,17 +56,12 @@ const HeightMap = React.forwardRef<HeightMapRef, {
 
   useEffect(() => {
     if (meshRef.current) {
-      console.log('ThreeViewer - Criando material com layers:', layers);
       const initialColors = Array(5).fill(null).map(() => new THREE.Color(0x000000));
       const initialHeights = Array(5).fill(1.0);
 
       layers.forEach((layer, index) => {
         initialColors[index].set(layer.color);
         initialHeights[index] = layer.heightPercentage / 100;
-        console.log(`ThreeViewer - Layer inicial ${index}:`, {
-          color: layer.color,
-          height: layer.heightPercentage / 100
-        });
       });
 
       const material = new THREE.ShaderMaterial({
@@ -162,7 +157,6 @@ const HeightMap = React.forwardRef<HeightMapRef, {
 
       materialRef.current = material;
       meshRef.current.material = material;
-      console.log('ThreeViewer - Material criado com sucesso');
     }
   }, [texture, baseHeight, baseThickness, layers, isSteppedMode, layerHeight]);
 
@@ -170,18 +164,12 @@ const HeightMap = React.forwardRef<HeightMapRef, {
   useEffect(() => {
     if (materialRef.current) {
       try {
-        console.log('ThreeViewer - Atualizando uniforms com layers:', layers);
-        console.log('ThreeViewer - Material atual:', materialRef.current);
         const colors = Array(5).fill(null).map(() => new THREE.Color(0x000000));
         const heights = Array(5).fill(1.0);
 
         layers.forEach((layer, index) => {
           colors[index].set(layer.color);
           heights[index] = layer.heightPercentage / 100;
-          console.log(`ThreeViewer - Layer ${index}:`, {
-            color: layer.color,
-            height: layer.heightPercentage / 100
-          });
         });
 
         materialRef.current.uniforms.heightMap.value = texture;
@@ -194,13 +182,6 @@ const HeightMap = React.forwardRef<HeightMapRef, {
         materialRef.current.uniforms.baseThickness.value = baseThickness;
         materialRef.current.uniforms.firstLayerHeight.value = layerHeight * 2;
         materialRef.current.needsUpdate = true;
-
-        console.log('ThreeViewer - Uniforms atualizados:', {
-          colors: colors.map(c => c.getHexString()),
-          heights,
-          numLayers: layers.length,
-          uniforms: materialRef.current.uniforms
-        });
 
       } catch (error) {
         console.error('Erro ao atualizar uniforms:', error);
@@ -466,12 +447,10 @@ const ThreeViewer: React.FC<ThreeViewerProps> = ({ imageUrl, baseHeight, baseThi
 
   useEffect(() => {
     if (imageUrl) {
-      console.log('ThreeViewer - Carregando textura da imagem:', imageUrl);
       const loader = new THREE.TextureLoader();
       loader.load(
         imageUrl,
         (loadedTexture) => {
-          console.log('ThreeViewer - Textura carregada com sucesso');
           loadedTexture.needsUpdate = true;
           setTexture(loadedTexture);
         },
@@ -501,17 +480,17 @@ const ThreeViewer: React.FC<ThreeViewerProps> = ({ imageUrl, baseHeight, baseThi
           className={`preview-mode-button ${isSteppedMode ? 'active' : ''}`}
           onClick={() => setIsSteppedMode(!isSteppedMode)}
         >
-          {isSteppedMode ? 'Visualização Suave' : 'Visualização em Camadas'}
+          {isSteppedMode ? 'Smooth View' : 'Layer View'}
         </button>
         <button
           className="preview-mode-button"
           onClick={() => setShowExportInfo(true)}
         >
-          Informações de Fatiamento
+          Slicing Info
         </button>
         {texture && (
           <button className="export-button" onClick={handleExport}>
-            Exportar STL
+            Export STL
           </button>
         )}
       </div>

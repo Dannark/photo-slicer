@@ -1,36 +1,36 @@
 # Photo Slicer
 
-Uma ferramenta web para criar modelos 3D multicores a partir de imagens para impressão 3D.
+A web tool for creating multi-colored 3D models from images for 3D printing.
 
-## Funcionalidades
+## Features
 
-- Carregue uma imagem e converta-a em um modelo 3D
-- Defina cores diferentes para diferentes alturas do modelo
-- Visualize o modelo em 3D com cores
-- Exporte o modelo em formato STL para impressão 3D
-- Visualização em camadas para melhor compreensão do resultado final
-- Informações detalhadas sobre o fatiamento e troca de cores
+- Upload an image and convert it into a 3D model
+- Set different colors for different heights of the model
+- View the model in 3D with colors
+- Export the model in STL format for 3D printing
+- Layer visualization for better understanding of the final result
+- Detailed information about slicing and color changes
 
-## Como Usar
+## How to Use
 
-1. Clique em "Trocar imagem" e selecione uma imagem
-2. Ajuste a altura total e a altura das camadas conforme necessário
-3. Use o slider de cores para definir diferentes cores para diferentes alturas
-4. Use o botão "Visualização em Camadas" para ver como ficará o modelo fatiado
-5. Clique em "Informações de Fatiamento" para ver detalhes sobre as trocas de cor
-6. Quando estiver satisfeito, clique em "Exportar STL" para baixar o modelo
+1. Click on "Change image" and select an image
+2. Adjust the total height and layer height as needed
+3. Use the color slider to set different colors for different heights
+4. Use the "Layer View" button to see how the sliced model will look
+5. Click on "Slicing Info" to see details about color changes
+6. When satisfied, click "Export STL" to download the model
 
-## Tecnologias Utilizadas
+## Technologies Used
 
 - React
 - Three.js
 - React Three Fiber
 - TypeScript
 
-## Contribuições
+## Contributions
 
-Contribuições são bem-vindas! Se você encontrou um bug ou tem uma sugestão de melhoria, por favor abra uma issue ou envie um pull request.
+Contributions are welcome! If you found a bug or have a suggestion for improvement, please open an issue or send a pull request.
 
-## Suporte o Projeto
+## Support the Project
 
-Se você gosta deste projeto e quer apoiar seu desenvolvimento, considere [me pagar um café](https://ko-fi.com/SEU_USERNAME_AQUI) ☕
+If you like this project and want to support its development, consider [buying me a coffee](https://ko-fi.com/Dannark) ☕

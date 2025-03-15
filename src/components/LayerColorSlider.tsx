@@ -28,6 +28,7 @@ const LayerColorSlider: React.FC<LayerColorSliderProps> = ({
   const [originalPositions, setOriginalPositions] = useState<number[] | null>(null);
   const [selectedDividerIndex, setSelectedDividerIndex] = useState<number | null>(null);
   const [isOverDivider, setIsOverDivider] = useState(false);
+  const [lastValidLayer, setLastValidLayer] = useState<number | null>(null);
 
   // Constantes
   const CANVAS_HEIGHT = 400;
@@ -100,6 +101,35 @@ const LayerColorSlider: React.FC<LayerColorSliderProps> = ({
       ctx.lineWidth = 1;
       ctx.strokeRect(10, currentY, CANVAS_WIDTH - 40, sectionHeight);
 
+      currentY += sectionHeight;
+      accumulatedLayers = nextAccumulatedLayers;
+    });
+
+    // Desenha linhas tracejadas para cada camada (DEPOIS das cores)
+    ctx.strokeStyle = 'rgba(0, 0, 0, 0.4)'; // Vermelho puro
+    ctx.lineWidth = 1; // Linha mais grossa
+    ctx.setLineDash([4, 4]); // Padrão tracejado mais visível
+    for (let i = 0; i <= totalLayers; i++) {
+      const y = SLIDER_START_Y + (i * layerPixelHeight);
+      ctx.beginPath();
+      ctx.moveTo(10, y);
+      ctx.lineTo(CANVAS_WIDTH - 30, y);
+      ctx.stroke();
+    }
+    ctx.setLineDash([]); // Reset linha tracejada
+
+    // Reset das variáveis para os botões
+    currentY = SLIDER_START_Y;
+    accumulatedLayers = 0;
+
+    // Desenha os botões e tooltips
+    layers.forEach((layer, index) => {
+      const nextAccumulatedLayers = index < layers.length - 1 
+        ? Math.floor((layer.heightPercentage / 100) * totalLayers)
+        : totalLayers;
+      const layerCount = nextAccumulatedLayers - accumulatedLayers;
+      const sectionHeight = layerCount * layerPixelHeight;
+
       // Desenha o botão de remover apenas se o mouse estiver sobre esta seção
       if (layers.length > 1 && hoveredY !== null && 
           hoveredY >= currentY && hoveredY <= currentY + sectionHeight) {
@@ -153,7 +183,19 @@ const LayerColorSlider: React.FC<LayerColorSliderProps> = ({
         const startLayer = accumulatedLayers + 1;
         const endLayer = nextAccumulatedLayers;
         
-        const tooltipText = `Camadas ${startLayer}-${endLayer}`;
+        // Verifica se está sobre uma divisória
+        const dividerY = currentY + sectionHeight;
+        const isOverDivider = Math.abs(hoveredY - dividerY) <= DRAG_HANDLE_HEIGHT/2;
+        
+        let tooltipText;
+        if (isOverDivider && index < layers.length - 1) {
+          // Se estiver sobre uma divisória, mostra a posição exata
+          tooltipText = `Layer ${endLayer}`;
+        } else {
+          // Caso contrário, mostra o range de camadas
+          tooltipText = `Layers ${startLayer}-${endLayer}`;
+        }
+        
         ctx.font = '12px Arial';
         const tooltipWidth = ctx.measureText(tooltipText).width + 20;
         
@@ -222,35 +264,70 @@ const LayerColorSlider: React.FC<LayerColorSliderProps> = ({
     if (isDragging !== null && isDragging < layers.length - 1 && originalPositions !== null) {
       const newLayers = [...layers];
       
-      // Calcula o número de camadas baseado na posição Y
+      // Calcula a camada atual baseado na posição Y
       const relativeY = Math.max(SLIDER_START_Y, Math.min(y, SLIDER_START_Y + SLIDER_HEIGHT));
-      const layerIndex = Math.floor((relativeY - SLIDER_START_Y) / layerPixelHeight);
+      const mouseLayer = Math.floor((relativeY - SLIDER_START_Y) / layerPixelHeight);
+
+      // Se é o primeiro movimento, inicializa lastValidLayer
+      if (lastValidLayer === null) {
+        const initialLayer = Math.floor((layers[isDragging].heightPercentage / 100) * totalLayers);
+        setLastValidLayer(initialLayer);
+        console.log('Iniciando movimento:', {
+          initialLayer,
+          totalLayers,
+          heightPercentage: layers[isDragging].heightPercentage
+        });
+        return;
+      }
+
+      // Obtém os limites em número de camadas
+      const minLayer = isDragging > 0 
+        ? Math.floor((layers[isDragging - 1].heightPercentage / 100) * totalLayers) + 1
+        : 1;
+      const maxLayer = isDragging < layers.length - 1 
+        ? Math.floor((layers[isDragging + 1].heightPercentage / 100) * totalLayers) - 1
+        : totalLayers - 1;
+
+      // Calcula a diferença em camadas
+      const diff = mouseLayer - lastValidLayer;
+      console.log('mouseLayer', mouseLayer)
       
-      // Calcula a porcentagem da cor atual
-      let currentPercentage = (layerIndex / totalLayers) * 100;
-
-      // Limites baseados nas cores adjacentes
-      const minPercentage = isDragging > 0 ? originalPositions[isDragging - 1] : 0;
-      const maxPercentage = isDragging < layers.length - 1 
-        ? originalPositions[isDragging + 1]
-        : 100;
-      
-      // Aplica os limites
-      currentPercentage = Math.max(minPercentage, Math.min(currentPercentage, maxPercentage));
-
-      // Restaura todas as posições originais primeiro
-      layers.forEach((_, index) => {
-        newLayers[index].heightPercentage = originalPositions[index];
-      });
-
-      // Ajusta apenas a cor que está sendo arrastada
-      newLayers[isDragging].heightPercentage = currentPercentage;
-
-      onChange(newLayers);
+      // Verifica se o mouse está em uma camada diferente da atual
+      if (mouseLayer !== lastValidLayer) {
+        // Move apenas uma camada na direção do mouse
+        const nextLayer = mouseLayer > lastValidLayer 
+          ? lastValidLayer + 1  // Move uma camada para cima
+          : lastValidLayer - 1; // Move uma camada para baixo
+        
+        // Verifica se está dentro dos limites
+        if (nextLayer >= minLayer && nextLayer <= maxLayer) {
+          setLastValidLayer(nextLayer);
+          
+          // Converte para porcentagem
+          const currentPercentage = Number(((nextLayer / totalLayers) * 100).toFixed(6));
+          
+          console.log('Debug movimento detalhado:', {
+            camadaAtual: nextLayer,
+            camadaDoMouse: mouseLayer,
+            camadaAnterior: lastValidLayer,
+            totalCamadas: totalLayers,
+            porcentagemCalculada: currentPercentage,
+            porcentagemAnterior: layers[isDragging].heightPercentage
+          });
+          
+          // Atualiza a posição da divisória
+          newLayers[isDragging] = {
+            ...newLayers[isDragging],
+            heightPercentage: currentPercentage
+          };
+          onChange(newLayers);
+        }
+      }
     }
   };
 
   const handleMouseDown = (e: React.MouseEvent) => {
+    setLastValidLayer(null);
     const { x, y } = getCanvasCoordinates(e);
 
     // Verifica se clicou em um botão de remover
@@ -262,6 +339,17 @@ const LayerColorSlider: React.FC<LayerColorSliderProps> = ({
         ? Math.floor((layers[i].heightPercentage / 100) * totalLayers)
         : totalLayers;
       const sectionHeight = (nextAccumulatedLayers - accumulatedLayers) * layerPixelHeight;
+
+      // Verifica se clicou dentro da seção da cor (excluindo a área dos botões)
+      if (y >= currentY && y <= currentY + sectionHeight && x >= 10 && x <= CANVAS_WIDTH - 40) {
+        // Se for duplo clique, abre o color picker para esta camada
+        if (e.detail === 2) {
+          setSelectedDividerIndex(i);
+          setShowColorPicker(true);
+          return;
+        }
+      }
+
       const buttonY = currentY + sectionHeight / 2;
 
       // Verifica se clicou no botão de remover (apenas se o mouse estiver sobre a seção)
@@ -327,6 +415,7 @@ const LayerColorSlider: React.FC<LayerColorSliderProps> = ({
   };
 
   const handleMouseUp = () => {
+    setLastValidLayer(null);
     setIsDragging(null);
     setOriginalPositions(null);
   };
@@ -334,39 +423,45 @@ const LayerColorSlider: React.FC<LayerColorSliderProps> = ({
   const handleColorSelect = (color: string) => {
     if (selectedDividerIndex !== null) {
       const newLayers = [...layers];
-      const currentIndex = selectedDividerIndex;
       
-      // Calcula o número de camadas disponíveis
-      const currentLayerCount = Math.floor((layers[currentIndex].heightPercentage / 100) * totalLayers);
-      const nextLayerCount = Math.floor((layers[currentIndex + 1].heightPercentage / 100) * totalLayers) - 
-                           Math.floor((layers[currentIndex].heightPercentage / 100) * totalLayers);
-      
-      // Decide de qual cor "pegar" uma camada
-      let sourceIndex = currentLayerCount > 1 ? currentIndex : currentIndex + 1;
-      
-      // Calcula a nova porcentagem para uma camada
-      const oneLayerPercentage = (1 / totalLayers) * 100;
-      
-      // Ajusta as porcentagens
-      if (sourceIndex === currentIndex) {
-        // Reduz uma camada da cor atual
-        newLayers[currentIndex].heightPercentage -= oneLayerPercentage;
+      // Se estamos editando uma cor existente (duplo clique)
+      if (selectedDividerIndex < layers.length) {
+        newLayers[selectedDividerIndex].color = color;
       } else {
-        // Reduz uma camada da próxima cor
-        const currentEndPercentage = layers[currentIndex].heightPercentage;
-        newLayers[currentIndex + 1].heightPercentage -= oneLayerPercentage;
+        // Lógica existente para adicionar nova cor entre camadas
+        const currentIndex = selectedDividerIndex;
         
-        // Ajusta as porcentagens das cores subsequentes
-        for (let i = currentIndex + 2; i < newLayers.length; i++) {
-          newLayers[i].heightPercentage -= oneLayerPercentage;
+        // Calcula o número de camadas disponíveis
+        const currentLayerCount = Math.floor((layers[currentIndex].heightPercentage / 100) * totalLayers);
+        const nextLayerCount = Math.floor((layers[currentIndex + 1].heightPercentage / 100) * totalLayers) - 
+                           Math.floor((layers[currentIndex].heightPercentage / 100) * totalLayers);
+        
+        // Decide de qual cor "pegar" uma camada
+        let sourceIndex = currentLayerCount > 1 ? currentIndex : currentIndex + 1;
+        
+        // Calcula a nova porcentagem para uma camada
+        const oneLayerPercentage = (1 / totalLayers) * 100;
+        
+        // Ajusta as porcentagens
+        if (sourceIndex === currentIndex) {
+          // Reduz uma camada da cor atual
+          newLayers[currentIndex].heightPercentage -= oneLayerPercentage;
+        } else {
+          // Reduz uma camada da próxima cor
+          newLayers[currentIndex + 1].heightPercentage -= oneLayerPercentage;
+          
+          // Ajusta as porcentagens das cores subsequentes
+          for (let i = currentIndex + 2; i < newLayers.length; i++) {
+            newLayers[i].heightPercentage -= oneLayerPercentage;
+          }
         }
+        
+        // Insere a nova cor
+        newLayers.splice(currentIndex + 1, 0, {
+          color,
+          heightPercentage: layers[currentIndex].heightPercentage + oneLayerPercentage
+        });
       }
-      
-      // Insere a nova cor
-      newLayers.splice(currentIndex + 1, 0, {
-        color,
-        heightPercentage: layers[currentIndex].heightPercentage + oneLayerPercentage
-      });
       
       onChange(newLayers);
     }
@@ -375,7 +470,6 @@ const LayerColorSlider: React.FC<LayerColorSliderProps> = ({
   };
 
   const handlePatternSelect = (newLayers: LayerConfig[]) => {
-    console.log('LayerColorSlider - Novo padrão recebido:', newLayers);
     onChange(newLayers);
   };
 
