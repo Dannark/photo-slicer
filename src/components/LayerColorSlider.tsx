@@ -40,9 +40,11 @@ const LayerColorSlider: React.FC<LayerColorSliderProps> = ({
 
   // Calcula o número total de camadas
   const firstLayerHeight = layerHeight * 2;
-  const additionalBaseThickness = Math.max(0, baseThickness - firstLayerHeight);
-  const additionalBaseLayers = Math.floor(additionalBaseThickness / layerHeight);
-  const totalLayers = Math.floor(totalHeight / layerHeight) + additionalBaseLayers + 1; // +1 para a primeira camada
+  const baseLayers = Math.floor(baseThickness / layerHeight);
+  
+  // Calcula o número de camadas normais (excluindo a primeira camada que é dupla)
+  const normalLayers = Math.floor((totalHeight - firstLayerHeight - baseThickness) / layerHeight);
+  const totalLayers = normalLayers + baseLayers + 1; // +1 para a primeira camada
   
   // Calcula a altura de uma camada no canvas
   const layerPixelHeight = SLIDER_HEIGHT / totalLayers;
@@ -300,20 +302,20 @@ const LayerColorSlider: React.FC<LayerColorSliderProps> = ({
           : lastValidLayer - 1; // Move uma camada para baixo
         
         // Verifica se está dentro dos limites
-        if (nextLayer >= minLayer && nextLayer <= maxLayer) {
-          setLastValidLayer(nextLayer);
+        if (nextLayer >= minLayer && nextLayer <= maxLayer) { //
+          setLastValidLayer(mouseLayer);
           
           // Converte para porcentagem
           const currentPercentage = Number(((nextLayer / totalLayers) * 100).toFixed(6));
           
-          console.log('Debug movimento detalhado:', {
-            camadaAtual: nextLayer,
-            camadaDoMouse: mouseLayer,
-            camadaAnterior: lastValidLayer,
-            totalCamadas: totalLayers,
-            porcentagemCalculada: currentPercentage,
-            porcentagemAnterior: layers[isDragging].heightPercentage
-          });
+          // console.log('Debug movimento detalhado:', {
+          //   camadaAtual: nextLayer,
+          //   camadaDoMouse: mouseLayer,
+          //   camadaAnterior: lastValidLayer,
+          //   totalCamadas: totalLayers,
+          //   porcentagemCalculada: currentPercentage,
+          //   porcentagemAnterior: layers[isDragging].heightPercentage
+          // });
           
           // Atualiza a posição da divisória
           newLayers[isDragging] = {
@@ -345,6 +347,7 @@ const LayerColorSlider: React.FC<LayerColorSliderProps> = ({
         // Se for duplo clique, abre o color picker para esta camada
         if (e.detail === 2) {
           setSelectedDividerIndex(i);
+          console.log('selectedDividerIndex', i)
           setShowColorPicker(true);
           return;
         }

@@ -12,7 +12,7 @@ const MODEL_MAX_SIZE = 100;  // Dimensão máxima em mm
 
 interface ThreeViewerProps {
   imageUrl: string | null;
-  baseHeight: number;
+  baseHeight: number; // Agora representa a altura total
   baseThickness: number;
   layers: LayerConfig[];
   resolution: number;
@@ -25,7 +25,7 @@ interface HeightMapRef {
 
 const HeightMap = React.forwardRef<HeightMapRef, {
   texture: THREE.Texture;
-  baseHeight: number;
+  baseHeight: number; // Agora representa a altura total
   baseThickness: number;
   layers: LayerConfig[];
   resolution: number;
@@ -518,7 +518,7 @@ const ThreeViewer: React.FC<ThreeViewerProps> = ({ imageUrl, baseHeight, baseThi
           firstLayerHeight={layerHeight * 2}
           layerHeight={layerHeight}
           layers={layers}
-          baseHeight={baseHeight}
+          numLayers={Math.floor(baseHeight / layerHeight)}
           baseThickness={baseThickness}
           onClose={() => setShowExportInfo(false)}
         />

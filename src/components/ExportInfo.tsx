@@ -5,7 +5,7 @@ interface ExportInfoProps {
   firstLayerHeight: number;
   layerHeight: number;
   layers: LayerConfig[];
-  baseHeight: number;
+  numLayers: number;
   baseThickness: number;
   onClose: () => void;
 }
@@ -14,7 +14,7 @@ const ExportInfo: React.FC<ExportInfoProps> = ({
   firstLayerHeight, 
   layerHeight, 
   layers, 
-  baseHeight,
+  numLayers,
   baseThickness,
   onClose 
 }) => {
@@ -23,10 +23,9 @@ const ExportInfo: React.FC<ExportInfoProps> = ({
     const ranges: { color: string; start: number; end: number }[] = [];
     
     // Calcula o número total de camadas
-    const firstLayerHeight = layerHeight * 2;
     const additionalBaseThickness = Math.max(0, baseThickness - firstLayerHeight);
     const additionalBaseLayers = Math.floor(additionalBaseThickness / layerHeight);
-    const totalLayers = Math.floor(baseHeight / layerHeight) + additionalBaseLayers + 1; // +1 para a primeira camada
+    const totalLayers = numLayers + additionalBaseLayers + 1; // +1 para a primeira camada
 
     let previousEnd = 0;
     layers.forEach((layer, index) => {

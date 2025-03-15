@@ -6,8 +6,8 @@ export interface LayerConfig {
 }
 
 interface HeightControlsProps {
-  baseHeight: number;
-  onBaseHeightChange: (height: number) => void;
+  numLayers: number;
+  onNumLayersChange: (layers: number) => void;
   baseThickness: number;
   onBaseThicknessChange: (thickness: number) => void;
   layerHeight: number;
@@ -17,8 +17,8 @@ interface HeightControlsProps {
 }
 
 const HeightControls: React.FC<HeightControlsProps> = ({
-  baseHeight,
-  onBaseHeightChange,
+  numLayers,
+  onNumLayersChange,
   baseThickness,
   onBaseThicknessChange,
   layerHeight,
@@ -34,18 +34,19 @@ const HeightControls: React.FC<HeightControlsProps> = ({
   // Primeira camada é sempre o dobro da altura da camada normal
   const firstLayerHeight = roundToTwoDecimals(layerHeight * 2);
   
-  // Base adicional (além da primeira camada)
-  const additionalBaseThickness = roundToTwoDecimals(Math.max(0, baseThickness - firstLayerHeight));
+  // Base layers (número de camadas após a primeira camada)
+  const baseLayers = Math.floor(baseThickness / layerHeight);
   
-  // Calcula o número total de camadas
-  const additionalBaseLayers = Math.floor(additionalBaseThickness / layerHeight);
-  const totalLayers = Math.floor(baseHeight / layerHeight) + additionalBaseLayers + 1; // +1 para a primeira camada
+  // Calcula o número total de camadas e altura total
+  const totalLayers = numLayers + baseLayers + 1; // +1 para a primeira camada
+  const totalHeight = roundToTwoDecimals((numLayers - 1) * layerHeight + firstLayerHeight + (baseLayers * layerHeight));
 
-  const handleBaseThicknessChange = (value: number) => {
-    // Garante que a espessura total da base não seja menor que a primeira camada
-    const minThickness = firstLayerHeight;
-    const normalizedThickness = roundToTwoDecimals(Math.max(minThickness, Math.round((value - minThickness) / layerHeight) * layerHeight + minThickness));
-    onBaseThicknessChange(normalizedThickness);
+  const handleBaseLayersChange = (numBaseLayers: number) => {
+    // Garante que o número de camadas base seja não-negativo
+    const newBaseLayers = Math.max(0, numBaseLayers);
+    // Converte o número de camadas para espessura
+    const newBaseThickness = roundToTwoDecimals(newBaseLayers * layerHeight);
+    onBaseThicknessChange(newBaseThickness);
   };
 
   const handleLayerHeightChange = (value: number) => {
@@ -53,10 +54,15 @@ const HeightControls: React.FC<HeightControlsProps> = ({
     const newLayerHeight = roundToTwoDecimals(Math.max(0.04, value));
     onLayerHeightChange(newLayerHeight);
     
-    // Ajusta a espessura da base para manter o número de camadas adicionais
-    const newFirstLayerHeight = roundToTwoDecimals(newLayerHeight * 2);
-    const newBaseThickness = roundToTwoDecimals(newFirstLayerHeight + (additionalBaseLayers * newLayerHeight));
+    // Ajusta a espessura da base para manter o número de camadas
+    const newBaseThickness = roundToTwoDecimals(baseLayers * newLayerHeight);
     onBaseThicknessChange(newBaseThickness);
+  };
+
+  const handleNumLayersChange = (value: number) => {
+    // Garante um valor mínimo de 1 camada
+    const newNumLayers = Math.max(1, value);
+    onNumLayersChange(newNumLayers);
   };
 
   return (
@@ -86,27 +92,27 @@ const HeightControls: React.FC<HeightControlsProps> = ({
         </div>
 
         <div className="control-item">
-          <label>Additional Base (mm):</label>
+          <label>Base Layers:</label>
           <input
             type="number"
             min="0"
-            step={layerHeight}
-            value={additionalBaseThickness}
-            onChange={(e) => handleBaseThicknessChange(e.target.value ? Number(e.target.value) + firstLayerHeight : firstLayerHeight)}
+            step="1"
+            value={baseLayers}
+            onChange={(e) => handleBaseLayersChange(Number(e.target.value))}
           />
-          <span>Additional layers: {additionalBaseLayers}</span>
+          <span>Height: {roundToTwoDecimals(baseLayers * layerHeight)}mm</span>
         </div>
 
         <div className="control-item">
-          <label>Total Height (mm):</label>
+          <label>Number of Layers:</label>
           <input
             type="number"
-            min={layerHeight}
-            step={layerHeight}
-            value={baseHeight}
-            onChange={(e) => onBaseHeightChange(Number(e.target.value))}
+            min="1"
+            step="1"
+            value={numLayers}
+            onChange={(e) => handleNumLayersChange(Number(e.target.value))}
           />
-          <span>Total Layers: {totalLayers}</span>
+          <span>Total Height: {totalHeight}mm</span>
         </div>
       </div>
       

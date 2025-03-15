@@ -6,14 +6,14 @@ import HeightControls, { LayerConfig } from './components/HeightControls';
 import LayerColorSlider from './components/LayerColorSlider';
 
 const DEFAULT_LAYER_HEIGHT = 0.08; // mm por camada
-const DEFAULT_BASE_THICKNESS = 0.16; // 2 camadas de base por padrão
+const DEFAULT_BASE_LAYERS = 0; // Começa sem camadas base
 const DEFAULT_RESOLUTION = 200; // Resolução padrão da malha
 
 function App() {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
-  const [baseHeight, setBaseHeight] = useState(2);
+  const [numLayers, setNumLayers] = useState(25); // Valor padrão de 25 camadas
   const [layerHeight, setLayerHeight] = useState(DEFAULT_LAYER_HEIGHT);
-  const [baseThickness, setBaseThickness] = useState(DEFAULT_BASE_THICKNESS);
+  const [baseThickness, setBaseThickness] = useState(DEFAULT_BASE_LAYERS * DEFAULT_LAYER_HEIGHT);
   const [resolution, setResolution] = useState(DEFAULT_RESOLUTION);
   const [layers, setLayers] = useState<LayerConfig[]>([
     { color: '#000000', heightPercentage: 10 },   // Preto
@@ -22,6 +22,9 @@ function App() {
     { color: '#FFFFFF', heightPercentage: 100 }  // Branco
   ]);
   const [imageData, setImageData] = useState<ImageData | undefined>(undefined);
+
+  // Calcula a altura total baseada no número de camadas
+  const totalHeight = ((numLayers - 1) * layerHeight) + (layerHeight * 2) + Math.max(0, baseThickness - (layerHeight * 2));
 
   const handleImageUpload = (file: File) => {
     const url = URL.createObjectURL(file);
@@ -44,7 +47,7 @@ function App() {
   };
 
   const handleLayersChange = (newLayers: LayerConfig[]) => {
-    // console.log('App - Layers atualizados:', newLayers);
+    console.log('App - Layers atualizados:', newLayers);
     setLayers(newLayers);
   };
 
@@ -72,8 +75,8 @@ function App() {
           <>
             <aside className="sidebar">
               <HeightControls
-                baseHeight={baseHeight}
-                onBaseHeightChange={setBaseHeight}
+                numLayers={numLayers}
+                onNumLayersChange={setNumLayers}
                 baseThickness={baseThickness}
                 onBaseThicknessChange={setBaseThickness}
                 layerHeight={layerHeight}
@@ -85,7 +88,7 @@ function App() {
                 layers={layers}
                 onChange={handleLayersChange}
                 layerHeight={layerHeight}
-                totalHeight={baseHeight}
+                totalHeight={totalHeight}
                 imageData={imageData}
                 baseThickness={baseThickness}
               />
@@ -94,7 +97,7 @@ function App() {
             <main className="main-content">
               <ThreeViewer
                 imageUrl={imageUrl}
-                baseHeight={baseHeight}
+                baseHeight={totalHeight}
                 baseThickness={baseThickness}
                 layers={layers}
                 resolution={resolution}
