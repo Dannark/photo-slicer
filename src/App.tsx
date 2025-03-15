@@ -4,6 +4,7 @@ import ImageUploader from './components/ImageUploader';
 import ThreeViewer from './components/ThreeViewer';
 import HeightControls, { LayerConfig } from './components/HeightControls';
 import LayerColorSlider from './components/LayerColorSlider';
+import Version from './components/Version';
 
 const DEFAULT_LAYER_HEIGHT = 0.08; // mm por camada
 const DEFAULT_BASE_LAYERS = 0; // Começa sem camadas base
@@ -107,6 +108,7 @@ function App() {
           </>
         )}
       </div>
+      <Version />
     </div>
   );
 }
