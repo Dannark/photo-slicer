@@ -16,10 +16,10 @@ function App() {
   const [baseThickness, setBaseThickness] = useState(DEFAULT_BASE_LAYERS * DEFAULT_LAYER_HEIGHT);
   const [resolution, setResolution] = useState(DEFAULT_RESOLUTION);
   const [layers, setLayers] = useState<LayerConfig[]>([
-    { color: '#000000', heightPercentage: 10 },   // Preto
-    { color: '#666666', heightPercentage: 33 },  // Cinza escuro
-    { color: '#CCCCCC', heightPercentage: 66 },  // Cinza claro
-    { color: '#FFFFFF', heightPercentage: 100 }  // Branco
+    { color: '#000000', heightPercentage: 10, td: 0.6 },   // Preto
+    { color: '#666666', heightPercentage: 33, td: 1.4 },  // Cinza escuro
+    { color: '#CCCCCC', heightPercentage: 66, td: 2.0 },  // Cinza claro
+    { color: '#FFFFFF', heightPercentage: 100, td: 2.0 }  // Branco
   ]);
   const [imageData, setImageData] = useState<ImageData | undefined>(undefined);
 
@@ -47,7 +47,7 @@ function App() {
   };
 
   const handleLayersChange = (newLayers: LayerConfig[]) => {
-    console.log('App - Layers atualizados:', newLayers);
+    // console.log('App - Layers atualizados:', newLayers);
     setLayers(newLayers);
   };
 

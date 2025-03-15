@@ -274,11 +274,6 @@ const LayerColorSlider: React.FC<LayerColorSliderProps> = ({
       if (lastValidLayer === null) {
         const initialLayer = Math.floor((layers[isDragging].heightPercentage / 100) * totalLayers);
         setLastValidLayer(initialLayer);
-        console.log('Iniciando movimento:', {
-          initialLayer,
-          totalLayers,
-          heightPercentage: layers[isDragging].heightPercentage
-        });
         return;
       }
 
@@ -292,7 +287,6 @@ const LayerColorSlider: React.FC<LayerColorSliderProps> = ({
 
       // Calcula a diferença em camadas
       const diff = mouseLayer - lastValidLayer;
-      console.log('mouseLayer', mouseLayer)
       
       // Verifica se o mouse está em uma camada diferente da atual
       if (mouseLayer !== lastValidLayer) {
@@ -307,15 +301,6 @@ const LayerColorSlider: React.FC<LayerColorSliderProps> = ({
           
           // Converte para porcentagem
           const currentPercentage = Number(((nextLayer / totalLayers) * 100).toFixed(6));
-          
-          // console.log('Debug movimento detalhado:', {
-          //   camadaAtual: nextLayer,
-          //   camadaDoMouse: mouseLayer,
-          //   camadaAnterior: lastValidLayer,
-          //   totalCamadas: totalLayers,
-          //   porcentagemCalculada: currentPercentage,
-          //   porcentagemAnterior: layers[isDragging].heightPercentage
-          // });
           
           // Atualiza a posição da divisória
           newLayers[isDragging] = {
@@ -423,13 +408,14 @@ const LayerColorSlider: React.FC<LayerColorSliderProps> = ({
     setOriginalPositions(null);
   };
 
-  const handleColorSelect = (color: string) => {
+  const handleColorSelect = (color: string, td: number) => {
     if (selectedDividerIndex !== null) {
       const newLayers = [...layers];
       
       // Se estamos editando uma cor existente (duplo clique)
       if (selectedDividerIndex < layers.length) {
         newLayers[selectedDividerIndex].color = color;
+        newLayers[selectedDividerIndex].td = td;
       } else {
         // Lógica existente para adicionar nova cor entre camadas
         const currentIndex = selectedDividerIndex;
@@ -462,6 +448,7 @@ const LayerColorSlider: React.FC<LayerColorSliderProps> = ({
         // Insere a nova cor
         newLayers.splice(currentIndex + 1, 0, {
           color,
+          td,
           heightPercentage: layers[currentIndex].heightPercentage + oneLayerPercentage
         });
       }
@@ -496,8 +483,10 @@ const LayerColorSlider: React.FC<LayerColorSliderProps> = ({
       />
       {showColorPicker && selectedDividerIndex !== null && (
         <ColorPicker
-          onColorSelect={(color) => handleColorSelect(color)}
+          onColorSelect={(color, td) => handleColorSelect(color, td)}
           onClose={() => setShowColorPicker(false)}
+          initialColor={layers[selectedDividerIndex].color}
+          initialTd={layers[selectedDividerIndex].td}
         />
       )}
     </div>

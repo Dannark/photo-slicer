@@ -3,6 +3,7 @@ import React from 'react';
 export interface LayerConfig {
   color: string;
   heightPercentage: number;
+  td: number;
 }
 
 interface HeightControlsProps {

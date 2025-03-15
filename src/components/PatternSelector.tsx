@@ -12,28 +12,28 @@ const PatternSelector: React.FC<PatternSelectorProps> = ({ onSelectPattern, imag
 
     if (pattern === 'grayscale-fixed') {
       newPattern = [
-        { color: '#000000', heightPercentage: 10 },   // Preto
-        { color: '#666666', heightPercentage: 33 },  // Cinza escuro
-        { color: '#CCCCCC', heightPercentage: 66 },  // Cinza claro
-        { color: '#FFFFFF', heightPercentage: 100 }  // Branco
+        { color: '#000000', heightPercentage: 10, td: 0.6 },   // Preto
+        { color: '#666666', heightPercentage: 33, td: 1.4 },  // Cinza escuro
+        { color: '#CCCCCC', heightPercentage: 66, td: 2.0 },  // Cinza claro
+        { color: '#FFFFFF', heightPercentage: 100, td: 2.0 }  // Branco
       ];
     } else if (pattern === 'grayscale-distributed') {
       newPattern = [
-        { color: '#000000', heightPercentage: 25 },
-        { color: '#404040', heightPercentage: 50 },
-        { color: '#808080', heightPercentage: 75 },
-        { color: '#ffffff', heightPercentage: 100 }
+        { color: '#000000', heightPercentage: 25, td: 0.6 },
+        { color: '#404040', heightPercentage: 50, td: 1.4 },
+        { color: '#808080', heightPercentage: 75, td: 2.0 },
+        { color: '#ffffff', heightPercentage: 100, td: 2.0 }
       ];
     } else if (pattern === 'auto') {
       if (imageData && imageData.data.length > 0) {
         newPattern = posterizeImage(imageData);
       } else {
         newPattern = [
-          { color: '#000000', heightPercentage: 20 },
-          { color: '#404040', heightPercentage: 40 },
-          { color: '#808080', heightPercentage: 60 },
-          { color: '#C0C0C0', heightPercentage: 80 },
-          { color: '#FFFFFF', heightPercentage: 100 }
+          { color: '#000000', heightPercentage: 20, td: 0.6 },
+          { color: '#404040', heightPercentage: 40, td: 1.4 },
+          { color: '#808080', heightPercentage: 60, td: 1.4 },
+          { color: '#C0C0C0', heightPercentage: 80, td: 2.0 },
+          { color: '#FFFFFF', heightPercentage: 100, td: 2.0 }
         ];
       }
     }
@@ -76,7 +76,8 @@ const PatternSelector: React.FC<PatternSelectorProps> = ({ onSelectPattern, imag
         const gray = Math.round((index / (numLevels - 1)) * 255);
         return {
           color: `#${gray.toString(16).padStart(2, '0').repeat(3)}`,
-          heightPercentage: ((index + 1) * 100) / numLevels
+          heightPercentage: ((index + 1) * 100) / numLevels,
+          td: gray < 64 ? 0.6 : gray < 128 ? 1.4 : 2.0 // Define TD baseado no nível de cinza
         };
       }
       
@@ -85,12 +86,17 @@ const PatternSelector: React.FC<PatternSelectorProps> = ({ onSelectPattern, imag
       const g = Math.round(level.g / level.count);
       const b = Math.round(level.b / level.count);
       
+      // Calcula a luminância para determinar o TD
+      const luminance = 0.299 * r + 0.587 * g + 0.114 * b;
+      const td = luminance < 64 ? 0.6 : luminance < 128 ? 1.4 : 2.0;
+      
       // Converte para hexadecimal
       const color = `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
       
       return {
         color,
-        heightPercentage: ((index + 1) * 100) / numLevels
+        heightPercentage: ((index + 1) * 100) / numLevels,
+        td
       };
     });
     

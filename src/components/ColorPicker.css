@@ -1,0 +1,255 @@
+.color-picker-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.color-picker-container {
+  background-color: #1e1e1e;
+  border-radius: 8px;
+  padding: 20px;
+  width: 320px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  color: #fff;
+}
+
+.color-picker-container h3 {
+  margin: 0 0 20px 0;
+  text-align: center;
+  font-size: 1.2em;
+  color: #fff;
+}
+
+/* Sistema de abas */
+.tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 15px;
+  padding: 0 2px;
+}
+
+.tab {
+  padding: 8px 12px;
+  background-color: #2d2d2d;
+  border: none;
+  border-radius: 4px;
+  color: #ccc;
+  cursor: pointer;
+  font-size: 0.9em;
+  transition: all 0.2s;
+  flex: 1;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tab:hover {
+  background-color: #3d3d3d;
+  color: #fff;
+}
+
+.tab.active {
+  background-color: #61dafb;
+  color: #000;
+}
+
+.color-picker-section {
+  margin-bottom: 15px;
+  background-color: #2d2d2d;
+  border-radius: 4px;
+  padding: 12px;
+}
+
+.color-picker-section label {
+  display: block;
+  margin-bottom: 8px;
+  color: #ccc;
+  font-size: 0.9em;
+}
+
+/* Estilos para o seletor de marca */
+.brand-select {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #444;
+  border-radius: 4px;
+  background-color: #1e1e1e;
+  color: #fff;
+  font-size: 0.9em;
+  cursor: pointer;
+}
+
+.brand-select:hover {
+  border-color: #666;
+}
+
+.brand-select:focus {
+  outline: none;
+  border-color: #61dafb;
+}
+
+/* Grid de cores */
+.color-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.color-option {
+  position: relative;
+  width: 100%;
+  padding-bottom: 100%;
+  border-radius: 4px;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: all 0.2s;
+}
+
+.color-option:hover {
+  transform: scale(1.05);
+  z-index: 1;
+}
+
+.color-option.selected {
+  border-color: #61dafb;
+}
+
+.color-tooltip {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #000;
+  color: #fff;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.8em;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s;
+  z-index: 2;
+}
+
+.color-option:hover .color-tooltip {
+  opacity: 1;
+}
+
+/* Seção de cor personalizada */
+.custom-color-section {
+  margin-top: 15px;
+}
+
+.color-input-container {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  width: 100%;
+  margin-bottom: 15px;
+}
+
+.color-input-container input[type="color"] {
+  -webkit-appearance: none;
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 4px;
+  padding: 0;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.color-input-container input[type="color"]::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+.color-input-container input[type="color"]::-webkit-color-swatch {
+  border: none;
+  border-radius: 4px;
+}
+
+.color-input-container input[type="text"] {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 12px;
+  border: 1px solid #444;
+  border-radius: 4px;
+  background-color: #1e1e1e;
+  color: #fff;
+  font-family: monospace;
+}
+
+/* Campo TD */
+.td-input {
+  width: calc(100% - 24px); /* Subtrai o padding total (12px de cada lado) */
+  padding: 8px 12px;
+  border: 1px solid #444;
+  border-radius: 4px;
+  background-color: #1e1e1e;
+  color: #fff;
+  font-size: 0.9em;
+  margin-bottom: 15px;
+  box-sizing: border-box;
+}
+
+.td-input:focus,
+.color-input-container input[type="text"]:focus {
+  outline: none;
+  border-color: #61dafb;
+}
+
+/* Botões */
+.color-picker-buttons {
+  display: flex;
+  gap: 10px;
+  margin-top: 5px;
+  justify-content: flex-end;
+}
+
+.color-picker-buttons button {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.9em;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.color-picker-buttons button:first-child {
+  background-color: #61dafb;
+  color: #000;
+}
+
+.color-picker-buttons button:last-child {
+  background-color: #444;
+  color: #fff;
+}
+
+.color-picker-buttons button:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Animações */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.color-grid {
+  animation: fadeIn 0.3s ease-in-out;
+} 

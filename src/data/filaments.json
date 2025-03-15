@@ -1,0 +1,76 @@
+{
+  "brands": [
+    {
+      "name": "Bambu Lab",
+      "materials": [
+        {
+          "type": "PLA",
+          "variants": [
+            {
+              "name": "Basic",
+              "filaments": [
+                {
+                  "name": "Black (10101)",
+                  "color": "#000000",
+                  "td": 0.6,
+                  "price": 29.99
+                },
+                {
+                  "name": "White (14102)",
+                  "color": "#FFFFFF",
+                  "td": 2.0,
+                  "price": 29.99
+                },
+                {
+                  "name": "Gray (14104)",
+                  "color": "#CDCECA",
+                  "td": 1.4,
+                  "price": 29.99
+                },
+                {
+                  "name": "Blue (10601)",
+                  "color": "#0A2989",
+                  "td": 4.0,
+                  "price": 29.99
+                },
+                {
+                  "name": "Bright Green (10503)",
+                  "color": "#BECF00",
+                  "td": 4.0,
+                  "price": 29.99
+                },
+                {
+                  "name": "Cyan (10603)",
+                  "color": "#0086D6",
+                  "td": 8.0,
+                  "price": 29.99
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "3D Lab",
+      "materials": [
+        {
+          "type": "PLA",
+          "variants": [
+            {
+              "name": "Standard",
+              "filaments": [
+                {
+                  "name": "White",
+                  "color": "#FFFFFF",
+                  "td": 10.0,
+                  "price": 24.99
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
