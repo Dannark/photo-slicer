@@ -1,76 +1,1210 @@
 {
-  "brands": [
-    {
-      "name": "Bambu Lab",
-      "materials": [
+    "Filaments": [
         {
-          "type": "PLA",
-          "variants": [
-            {
-              "name": "Basic",
-              "filaments": [
-                {
-                  "name": "Black (10101)",
-                  "color": "#000000",
-                  "td": 0.6,
-                  "price": 29.99
-                },
-                {
-                  "name": "White (14102)",
-                  "color": "#FFFFFF",
-                  "td": 2.0,
-                  "price": 29.99
-                },
-                {
-                  "name": "Gray (14104)",
-                  "color": "#CDCECA",
-                  "td": 1.4,
-                  "price": 29.99
-                },
-                {
-                  "name": "Blue (10601)",
-                  "color": "#0A2989",
-                  "td": 4.0,
-                  "price": 29.99
-                },
-                {
-                  "name": "Bright Green (10503)",
-                  "color": "#BECF00",
-                  "td": 4.0,
-                  "price": 29.99
-                },
-                {
-                  "name": "Cyan (10603)",
-                  "color": "#0086D6",
-                  "td": 8.0,
-                  "price": 29.99
-                }
-              ]
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "name": "3D Lab",
-      "materials": [
+            "Brand": "PolyLite",
+            "Color": "#95e1ff",
+            "Name": "Aqua Blue",
+            "Owned": false,
+            "Transmissivity": 3.6,
+            "Type": "PLA",
+            "uuid": "{a3b6d99c-42e8-7e7e-c1ea-a4ec42153f46}"
+        },
         {
-          "type": "PLA",
-          "variants": [
-            {
-              "name": "Standard",
-              "filaments": [
-                {
-                  "name": "White",
-                  "color": "#FFFFFF",
-                  "td": 10.0,
-                  "price": 24.99
-                }
-              ]
-            }
-          ]
+            "Brand": "PolyLite",
+            "Color": "#775c50",
+            "Name": "Army Brown",
+            "Owned": false,
+            "Transmissivity": 0.3,
+            "Type": "ASA",
+            "uuid": "{36d01486-8e62-27ce-1ef7-9889a70f72ab}"
+        },
+        {
+            "Brand": "PolyLite",
+            "Color": "#68724d",
+            "Name": "Army Green",
+            "Owned": false,
+            "Transmissivity": 0.3,
+            "Type": "ASA",
+            "uuid": "{57c43a47-a3a2-e1a0-87b3-a37b64a8e016}"
+        },
+        {
+            "Brand": "PolyLite",
+            "Color": "#0066d9",
+            "Name": "Azure Blue",
+            "Owned": false,
+            "Transmissivity": 3,
+            "Type": "PLA",
+            "uuid": "{c6192352-f680-1fb2-18f3-fb8e91111ba8}"
+        },
+        {
+            "Brand": "BambuLab Basic",
+            "Color": "#00ae42",
+            "Name": "BambuLab Green",
+            "Owned": false,
+            "Transmissivity": 2,
+            "Type": "PLA",
+            "uuid": "{23a3aa5b-7c28-4688-a783-d299cbb8623a}"
+        },
+        {
+            "Brand": "PolyLite",
+            "Color": "#c6ad74",
+            "Name": "Beige",
+            "Owned": false,
+            "Transmissivity": 1.5,
+            "Type": "PLA",
+            "uuid": "{ad10bf8e-91fc-a96f-7947-5ba679425019}"
+        },
+        {
+            "Brand": "BambuLab Basic",
+            "Color": "#e7ceb5",
+            "Name": "Beige",
+            "Owned": false,
+            "Transmissivity": 8,
+            "Type": "PLA",
+            "uuid": "{0e78ff37-53fa-40b4-a752-7fd38f38f142}"
+        },
+        {
+            "Brand": "PolyLite",
+            "Color": "#000000",
+            "Name": "Black",
+            "Owned": false,
+            "Transmissivity": 0.3,
+            "Type": "PETG",
+            "uuid": "{d9835766-f16b-7290-55b3-0e060d99b46c}"
+        },
+        {
+            "Brand": "PolyLite",
+            "Color": "#101820",
+            "Name": "Black",
+            "Owned": false,
+            "Transmissivity": 0.3,
+            "Type": "ABS",
+            "uuid": "{ea77b2f1-b784-f5fd-59ef-ea6684e1bc5a}"
+        },
+        {
+            "Brand": "BambuLab Basic",
+            "Color": "#000000",
+            "Name": "Black",
+            "Owned": false,
+            "Transmissivity": 0.6,
+            "Type": "PLA",
+            "uuid": "{43eb13d1-f422-4d84-9bce-37a0e10a2158}"
+        },
+        {
+            "Brand": "PolyLite",
+            "Color": "#101820",
+            "Name": "Black",
+            "Owned": false,
+            "Transmissivity": 0.3,
+            "Type": "ASA",
+            "uuid": "{b14ce5bb-2546-ab01-64e0-b27ac9713928}"
+        },
+        {
+            "Brand": "PolyLite",
+            "Color": "#080a0d",
+            "Name": "Black",
+            "Owned": false,
+            "Transmissivity": 0.3,
+            "Type": "PLA",
+            "uuid": "{4fdb74ec-692a-736b-12ae-878c5669237f}"
+        },
+        {
+            "Brand": "PolyLite",
+            "Color": "#002677",
+            "Name": "Blue",
+            "Owned": false,
+            "Transmissivity": 0.3,
+            "Type": "ASA",
+            "uuid": "{07661cc2-9a86-634f-a8bb-b39d37b3aabf}"
+        },
+        {
+            "Brand": "PolyLite",
+            "Color": "#003776",
+            "Name": "Blue",
+            "Owned": false,
+            "Transmissivity": 1,
+            "Type": "PLA",
+            "uuid": "{2e0650f6-85f2-b76f-bab1-bf8cfb77db7b}"
+        },
+        {
+            "Brand": "PolyLite",
+            "Color": "#004b87",
+            "Name": "Blue",
+            "Owned": false,
+            "Transmissivity": 1,
+            "Type": "PETG",
+            "uuid": "{6a61ebd8-52f5-53d3-dc61-0772c5b5bca0}"
+        },
+        {
+            "Brand": "PolyLite",
+            "Color": "#002677",
+            "Name": "Blue",
+            "Owned": false,
+            "Transmissivity": 0.5,
+            "Type": "ABS",
+            "uuid": "{7996a754-a26d-a57a-7225-4ebaebfd29b3}"
+        },
+        {
+            "Brand": "BambuLab Basic",
+            "Color": "#000e5b",
+            "Name": "Blue",
+            "Owned": false,
+            "Transmissivity": 2.5,
+            "Type": "PETG",
+            "uuid": "{39d49e89-fbd1-4c96-bffe-d297a41d4ef7}"
+        },
+        {
+            "Brand": "BambuLab Basic",
+            "Color": "#00358e",
+            "Name": "Blue",
+            "Owned": false,
+            "Transmissivity": 4,
+            "Type": "PLA",
+            "uuid": "{766f745e-c390-4c9d-8653-b16db19a1228}"
+        },
+        {
+            "Brand": "BambuLab Basic",
+            "Color": "#606e81",
+            "Name": "Blue Gray",
+            "Owned": false,
+            "Transmissivity": 2.7,
+            "Type": "PETG",
+            "uuid": "{938a676a-87cf-43d1-8a71-9dcca6db4e77}"
+        },
+        {
+            "Brand": "BambuLab Basic",
+            "Color": "#4c5f71",
+            "Name": "Blue Gray",
+            "Owned": false,
+            "Transmissivity": 3,
+            "Type": "PLA",
+            "uuid": "{d8613aaf-41c3-4b82-a885-402554966333}"
+        },
+        {
+            "Brand": "PolyLite",
+            "Color": "#55331a",
+            "Name": "Brown",
+            "Owned": false,
+            "Transmissivity": 0.8,
+            "Type": "PLA",
+            "uuid": "{ed0faadb-5418-04e8-0742-8311dc4709e2}"
+        },
+        {
+            "Brand": "BambuLab Basic",
+            "Color": "#9d432c",
+            "Name": "Brown",
+            "Owned": false,
+            "Transmissivity": 2,
+            "Type": "PLA",
+            "uuid": "{17ea47fa-6eb6-4109-911c-ea608f35cc85}"
+        },
+        {
+            "Brand": "Polylite",
+            "Color": "#cac3af",
+            "Name": "Champagne",
+            "Owned": false,
+            "Transmissivity": 2,
+            "Type": "PLA",
+            "uuid": "{f4551c17-d976-419e-b882-db23e081c79a}"
+        },
+        {
+            "Brand": "Polylite",
+            "Color": "#aa0000",
+            "Name": "Christmas Red",
+            "Owned": false,
+            "Transmissivity": 1.4,
+            "Type": "PLA",
+            "uuid": "{6af8d5ac-6c76-4eb2-8a7a-acfc00e0b767}"
+        },
+        {
+            "Brand": "PolyLite",
+            "Color": "#f8f8f8",
+            "Name": "Clear",
+            "Owned": false,
+            "Transmissivity": 14,
+            "Type": "PETG",
+            "uuid": "{2891e84b-278b-9c23-167c-658fe3179f24}"
+        },
+        {
+            "Brand": "Polylite",
+            "Color": "#006300",
+            "Name": "Comet Green",
+            "Owned": false,
+            "Transmissivity": 1.4,
+            "Type": "PLA",
+            "uuid": "{e248a1f7-f2d0-4983-873d-a54fac54d329}"
+        },
+        {
+            "Brand": "PolyLite",
+            "Color": "#e5c8a2",
+            "Name": "Cream",
+            "Owned": false,
+            "Transmissivity": 2,
+            "Type": "PLA",
+            "uuid": "{669096ae-c998-9c7e-490b-2c9e15e4b4d9}"
+        },
+        {
+            "Brand": "PolyLite",
+            "Color": "#041b3d",
+            "Name": "Dark Blue",
+            "Owned": false,
+            "Transmissivity": 0.5,
+            "Type": "PLA",
+            "uuid": "{1d3f1c95-1eb2-57a4-b2e5-12a31688fd4f}"
+        },
+        {
+            "Brand": "PolyLite",
+            "Color": "#13294b",
+            "Name": "Dark Blue",
+            "Owned": false,
+            "Transmissivity": 0.3,
+            "Type": "PETG",
+            "uuid": "{6e58dee6-81f8-4cc9-0dfb-233825d56c8e}"
+        },
+        {
+            "Brand": "Elegoo",
+            "Color": "#003eb1",
+            "Name": "Dark Blue",
+            "Owned": false,
+            "Transmissivity": 3.5,
+            "Type": "PLA",
+            "uuid": "{531b8dc7-fe94-4cec-aa01-35b1724413eb}"
+        },
+        {
+            "Brand": "PolyLite",
+            "Color": "#3d441e",
+            "Name": "Dark Green",
+            "Owned": false,
+            "Transmissivity": 0.3,
+            "Type": "PETG",
+            "uuid": "{70df3bb4-0559-9d08-a7a0-6968c054573c}"
+        },
+        {
+            "Brand": "PolyLite",
+            "Color": "#6c6d71",
+            "Name": "Dark Grey",
+            "Owned": false,
+            "Transmissivity": 0.3,
+            "Type": "ASA",
+            "uuid": "{b4aa5dfa-dbfe-2839-eb0f-5c8625fdf67f}"
+        },
+        {
+            "Brand": "PolyLite",
+            "Color": "#6c6d71",
+            "Name": "Dark Grey",
+            "Owned": false,
+            "Transmissivity": 0.8,
+            "Type": "ABS",
+            "uuid": "{352a67b7-5efe-69ee-32b3-d03ad3733f51}"
+        },
+        {
+            "Brand": "PolyLite",
+            "Color": "#0076cf",
+            "Name": "Electric Blue",
+            "Owned": false,
+            "Transmissivity": 1.5,
+            "Type": "PETG",
+            "uuid": "{ed738f6e-8b5f-f450-1bac-3c3595e2a0d3}"
+        },
+        {
+            "Brand": "PolyLite",
+            "Color": "#8dc8e8",
+            "Name": "GITD Blue",
+            "Owned": false,
+            "Transmissivity": 9,
+            "Type": "PLA",
+            "uuid": "{2e06c656-914f-1d55-d487-746c625550d6}"
+        },
+        {
+            "Brand": "PolyLite",
+            "Color": "#a1d884",
+            "Name": "GITD Green",
+            "Owned": false,
+            "Transmissivity": 10.5,
+            "Type": "PLA",
+            "uuid": "{447e3a6d-6b46-261c-12fe-cf1d788a79e2}"
+        },
+        {
+            "Brand": "PolyLite",
+            "Color": "#fc9f56",
+            "Name": "GITD Orange",
+            "Owned": false,
+            "Transmissivity": 10.5,
+            "Type": "PLA",
+            "uuid": "{de83ae3a-f684-40e1-17ce-2a4430f1d189}"
+        },
+        {
+            "Brand": "PolyLite",
+            "Color": "#012c61",
+            "Name": "Galaxy Blue",
+            "Owned": false,
+            "Transmissivity": 0.3,
+            "Type": "ASA",
+            "uuid": "{28a98cb5-b134-ebe4-64fc-8c876ebfcdbd}"
+        },
+        {
+            "Brand": "PolyLite",
+            "Color": "#474648",
+            "Name": "Galaxy Dark Grey",
+            "Owned": false,
+            "Transmissivity": 0.5,
+            "Type": "ABS",
+            "uuid": "{7dd68486-e763-2de7-59a4-2a93f0d0f309}"
+        },
+        {
+            "Brand": "PolyLite",
+            "Color": "#2e764c",
+            "Name": "Galaxy Green",
+            "Owned": false,
+            "Transmissivity": 0.5,
+            "Type": "ASA",
+            "uuid": "{dd28a98a-0e1e-63c6-6c68-ed0ed81736d4}"
+        },
+        {
+            "Brand": "PolyLite",
+            "Color": "#d76002",
+            "Name": "Galaxy Orange",
+            "Owned": false,
+            "Transmissivity": 3,
+            "Type": "ABS",
+            "uuid": "{20bbc2d3-7af5-8c43-3f4f-78b8a2d7612e}"
+        },
+        {
+            "Brand": "PolyLite",
+            "Color": "#5e4791",
+            "Name": "Galaxy Purple",
+            "Owned": false,
+            "Transmissivity": 1,
+            "Type": "ABS",
+            "uuid": "{990c6f4a-0ed8-ed29-c81f-0283c5282007}"
+        },
+        {
+            "Brand": "PolyLite",
+            "Color": "#bf1a11",
+            "Name": "Galaxy Red",
+            "Owned": false,
+            "Transmissivity": 1,
+            "Type": "ASA",
+            "uuid": "{d3a243f0-9e5c-80c2-7df9-a4e694f20e3d}"
+        },
+        {
+            "Brand": "PolyLite",
+            "Color": "#61b9c5",
+            "Name": "Galaxy Teal",
+            "Owned": false,
+            "Transmissivity": 1,
+            "Type": "ABS",
+            "uuid": "{64d58a3e-3dc9-4c59-5c93-505caccc1fb9}"
+        },
+        {
+            "Brand": "PolyLite",
+            "Color": "#cc8a00",
+            "Name": "Gold",
+            "Owned": false,
+            "Transmissivity": 3,
+            "Type": "PETG",
+            "uuid": "{6d209cad-f736-1aaf-cfe9-cf581bce7674}"
+        },
+        {
+            "Brand": "BambuLab Basic",
+            "Color": "#b28b33",
+            "Name": "Gold",
+            "Owned": false,
+            "Transmissivity": 1.7,
+            "Type": "PETG",
+            "uuid": "{17f0954b-29d4-4958-bfb5-70ca6a8a2fd2}"
+        },
+        {
+            "Brand": "PolyLite",
+            "Color": "#bd6200",
+            "Name": "Gold",
+            "Owned": false,
+            "Transmissivity": 2,
+            "Type": "ABS",
+            "uuid": "{e7fef239-4344-f816-d083-d681e9136b3f}"
+        },
+        {
+            "Brand": "BambuLab Basic",
+            "Color": "#8e9089",
+            "Name": "Gray",
+            "Owned": false,
+            "Transmissivity": 2,
+            "Type": "PLA",
+            "uuid": "{03b7beb6-5f62-4852-a70a-a0af973bc9b7}"
+        },
+        {
+            "Brand": "BambuLab Basic",
+            "Color": "#9ea2a2",
+            "Name": "Gray",
+            "Owned": false,
+            "Transmissivity": 3,
+            "Type": "PETG",
+            "uuid": "{3d77a198-9003-411a-a0fd-5dc731cebceb}"
+        },
+        {
+            "Brand": "Polylite",
+            "Color": "#819595",
+            "Name": "Gray v2",
+            "Owned": false,
+            "Transmissivity": 12,
+            "Type": "PLA",
+            "uuid": "{254d3905-9219-493f-afd8-91e3d909c3f8}"
+        },
+        {
+            "Brand": "PolyLite",
+            "Color": "#3a913f",
+            "Name": "Green",
+            "Owned": false,
+            "Transmissivity": 1,
+            "Type": "ABS",
+            "uuid": "{d4e3e1c5-8634-ec0f-be78-6a8136a39083}"
+        },
+        {
+            "Brand": "PolyLite",
+            "Color": "#06924d",
+            "Name": "Green",
+            "Owned": false,
+            "Transmissivity": 1,
+            "Type": "PLA",
+            "uuid": "{faff44e8-1d7c-0b17-2b07-12c9f35eacc7}"
+        },
+        {
+            "Brand": "BambuLab Basic",
+            "Color": "#009639",
+            "Name": "Green",
+            "Owned": false,
+            "Transmissivity": 1.7,
+            "Type": "PETG",
+            "uuid": "{0a4feb5b-e6d0-4bad-a9a2-3c0a02ff8d9d}"
+        },
+        {
+            "Brand": "BambuLab Basic",
+            "Color": "#003b3b",
+            "Name": "Green",
+            "Owned": false,
+            "Transmissivity": 2,
+            "Type": "PLA",
+            "uuid": "{beebebca-114a-49ad-a581-c72a369ccaa4}"
+        },
+        {
+            "Brand": "PolyLite",
+            "Color": "#00a95c",
+            "Name": "Green",
+            "Owned": false,
+            "Transmissivity": 0.5,
+            "Type": "ASA",
+            "uuid": "{80579ebc-0f16-4fba-2d39-4c47d5cb8eff}"
+        },
+        {
+            "Brand": "PolyLite",
+            "Color": "#37ad68",
+            "Name": "Green",
+            "Owned": false,
+            "Transmissivity": 1,
+            "Type": "PETG",
+            "uuid": "{02c48b86-b98f-bd94-4902-c18a0446bf6d}"
+        },
+        {
+            "Brand": "PolyLite",
+            "Color": "#888b8d",
+            "Name": "Grey",
+            "Owned": false,
+            "Transmissivity": 1,
+            "Type": "PETG",
+            "uuid": "{b5c5cb05-0171-9df6-1db0-93822ed16546}"
+        },
+        {
+            "Brand": "PolyLite",
+            "Color": "#888b8d",
+            "Name": "Grey",
+            "Owned": false,
+            "Transmissivity": 0.5,
+            "Type": "ASA",
+            "uuid": "{1dd2aa3a-82a8-caae-1cd9-cb33a4ed52a8}"
+        },
+        {
+            "Brand": "PolyLite",
+            "Color": "#888b8d",
+            "Name": "Grey",
+            "Owned": false,
+            "Transmissivity": 1,
+            "Type": "ABS",
+            "uuid": "{0283b19d-19d4-ad2c-de4a-0f3daa5e75b8}"
+        },
+        {
+            "Brand": "PolyLite",
+            "Color": "#8c9099",
+            "Name": "Grey",
+            "Owned": false,
+            "Transmissivity": 1,
+            "Type": "PLA",
+            "uuid": "{192b301a-d51e-c829-6373-741f8befdba9}"
+        },
+        {
+            "Brand": "BambuLab Basic",
+            "Color": "#ffffff",
+            "Name": "Jade White",
+            "Owned": false,
+            "Transmissivity": 5,
+            "Type": "PLA",
+            "uuid": "{29d0549f-7950-4e60-b9e5-aa081f71d61b}"
+        },
+        {
+            "Brand": "PolyLite",
+            "Color": "#446b20",
+            "Name": "Jungle Green",
+            "Owned": false,
+            "Transmissivity": 0.5,
+            "Type": "PLA",
+            "uuid": "{562de39f-257a-b4f7-c51c-986ef2d18b00}"
+        },
+        {
+            "Brand": "BambuLab Basic",
+            "Color": "#0069b1",
+            "Name": "Lake Blue",
+            "Owned": false,
+            "Transmissivity": 4,
+            "Type": "PETG",
+            "uuid": "{62e50775-c5f9-4896-8ce1-29bff6339584}"
+        },
+        {
+            "Brand": "PolyLite",
+            "Color": "#f1d335",
+            "Name": "Lemon Yellow",
+            "Owned": false,
+            "Transmissivity": 6.5,
+            "Type": "PLA",
+            "uuid": "{281d173f-205a-c3c0-7890-c1e297cd64a6}"
+        },
+        {
+            "Brand": "PolyLite",
+            "Color": "#5bc2e7",
+            "Name": "Light Blue",
+            "Owned": false,
+            "Transmissivity": 3.5,
+            "Type": "ABS",
+            "uuid": "{597f3a40-0aca-4e4b-745a-f76805130910}"
+        },
+        {
+            "Brand": "PolyLite",
+            "Color": "#c4d600",
+            "Name": "Lime",
+            "Owned": false,
+            "Transmissivity": 1.5,
+            "Type": "ABS",
+            "uuid": "{efd9c20a-9061-e9f9-b7e1-38800f3940b9}"
+        },
+        {
+            "Brand": "PolyLite",
+            "Color": "#c4d600",
+            "Name": "Lime Green",
+            "Owned": false,
+            "Transmissivity": 3.5,
+            "Type": "PETG",
+            "uuid": "{15af4062-bfb9-6569-378a-f04c73839503}"
+        },
+        {
+            "Brand": "BambuLab Basic",
+            "Color": "#b7db57",
+            "Name": "Lime Green",
+            "Owned": false,
+            "Transmissivity": 2.7,
+            "Type": "PETG",
+            "uuid": "{7bdd1b59-c2f6-4fd2-8948-257406af7341}"
+        },
+        {
+            "Brand": "PolyLite",
+            "Color": "#dede00",
+            "Name": "Lime Green",
+            "Owned": false,
+            "Transmissivity": 5,
+            "Type": "PLA",
+            "uuid": "{7436029b-8b28-57f5-ebd9-907045a4cdad}"
+        },
+        {
+            "Brand": "PolyLite",
+            "Color": "#c6007e",
+            "Name": "Magenta",
+            "Owned": false,
+            "Transmissivity": 1.5,
+            "Type": "PETG",
+            "uuid": "{48a93ef8-2a8a-be90-2665-306ec6655469}"
+        },
+        {
+            "Brand": "PolyLite",
+            "Color": "#f2306e",
+            "Name": "Magenta",
+            "Owned": false,
+            "Transmissivity": 1,
+            "Type": "PLA",
+            "uuid": "{addcc673-7fd5-7344-fc9f-e2c32b1739d5}"
+        },
+        {
+            "Brand": "PolyLite",
+            "Color": "#e8e6d0",
+            "Name": "Natural",
+            "Owned": false,
+            "Transmissivity": 35,
+            "Type": "PLA",
+            "uuid": "{8bcb2c01-32eb-81f3-382d-0182d6acafed}"
+        },
+        {
+            "Brand": "PolyLite",
+            "Color": "#f1e6b2",
+            "Name": "Natural",
+            "Owned": false,
+            "Transmissivity": 5.5,
+            "Type": "ASA",
+            "uuid": "{7e45df49-ef75-6383-d126-5375abc15e6c}"
+        },
+        {
+            "Brand": "BambuLab Basic",
+            "Color": "#f2eada",
+            "Name": "Nature",
+            "Owned": false,
+            "Transmissivity": 8,
+            "Type": "PETG",
+            "uuid": "{6119f4f9-2b3c-4c9f-95b4-3dcfa1226d0a}"
+        },
+        {
+            "Brand": "PolyLite",
+            "Color": "#857c00",
+            "Name": "Olive Green",
+            "Owned": false,
+            "Transmissivity": 1,
+            "Type": "PLA",
+            "uuid": "{5cebff49-7b75-29f5-8a17-19ada5fb351d}"
+        },
+        {
+            "Brand": "BambuLab Basic",
+            "Color": "#ff6a13",
+            "Name": "Orange",
+            "Owned": false,
+            "Transmissivity": 5,
+            "Type": "PLA",
+            "uuid": "{7ef6136d-ae6c-47fa-96df-9a130cfe5855}"
+        },
+        {
+            "Brand": "PolyLite",
+            "Color": "#ff6a13",
+            "Name": "Orange",
+            "Owned": false,
+            "Transmissivity": 6.5,
+            "Type": "ABS",
+            "uuid": "{d02439e2-dbfb-0558-cf43-da3928018d00}"
+        },
+        {
+            "Brand": "PolyLite",
+            "Color": "#ff671f",
+            "Name": "Orange",
+            "Owned": false,
+            "Transmissivity": 4,
+            "Type": "PETG",
+            "uuid": "{c0032139-c5f9-1263-dabc-0cd869b3cbe6}"
+        },
+        {
+            "Brand": "PolyLite",
+            "Color": "#ff6a13",
+            "Name": "Orange",
+            "Owned": false,
+            "Transmissivity": 3,
+            "Type": "ASA",
+            "uuid": "{59e5fc02-e888-ec6d-3279-556bdde66ec0}"
+        },
+        {
+            "Brand": "PolyLite",
+            "Color": "#f67405",
+            "Name": "Orange",
+            "Owned": false,
+            "Transmissivity": 7.5,
+            "Type": "PLA",
+            "uuid": "{a51914a4-ed86-2d4a-d24c-adf6e6b78394}"
+        },
+        {
+            "Brand": "BambuLab Basic",
+            "Color": "#ff671f",
+            "Name": "Orange",
+            "Owned": false,
+            "Transmissivity": 4.5,
+            "Type": "PETG",
+            "uuid": "{eed618fd-c51d-42a4-b971-50cc031aba7b}"
+        },
+        {
+            "Brand": "PolyLite",
+            "Color": "#ee9bb5",
+            "Name": "Pink",
+            "Owned": false,
+            "Transmissivity": 3,
+            "Type": "PLA",
+            "uuid": "{01d6f4ef-945c-3a4a-e809-476efc268324}"
+        },
+        {
+            "Brand": "BambuLab Basic",
+            "Color": "#ff5869",
+            "Name": "Pink",
+            "Owned": false,
+            "Transmissivity": 8,
+            "Type": "PLA",
+            "uuid": "{d0052b88-70f8-488f-b071-0d62f887b51d}"
+        },
+        {
+            "Brand": "PolyLite",
+            "Color": "#f59bbb",
+            "Name": "Pink",
+            "Owned": false,
+            "Transmissivity": 2.5,
+            "Type": "PETG",
+            "uuid": "{1dfe4146-9e39-c00a-02c6-d0cf35b35880}"
+        },
+        {
+            "Brand": "PolyLite",
+            "Color": "#f59bbb",
+            "Name": "Pink",
+            "Owned": false,
+            "Transmissivity": 4,
+            "Type": "ABS",
+            "uuid": "{18b7fe60-2a3f-d64b-33d6-f9a15de4fe47}"
+        },
+        {
+            "Brand": "PolyLite",
+            "Color": "#2dccd3",
+            "Name": "PolyMaker Teal",
+            "Owned": false,
+            "Transmissivity": 1,
+            "Type": "PETG",
+            "uuid": "{a91da618-04b2-b471-62c7-f80cc3a236b0}"
+        },
+        {
+            "Brand": "PolyLite",
+            "Color": "#00b4bc",
+            "Name": "PolyMaker Teal",
+            "Owned": false,
+            "Transmissivity": 0.5,
+            "Type": "ASA",
+            "uuid": "{d778f4d0-b39b-9528-a49a-75d45d525a60}"
+        },
+        {
+            "Brand": "PolyLite",
+            "Color": "#4cc0c7",
+            "Name": "Polymaker Teal",
+            "Owned": false,
+            "Transmissivity": 0.5,
+            "Type": "PLA",
+            "uuid": "{07a68ca4-4039-b5a1-866d-6bc49766ccaa}"
+        },
+        {
+            "Brand": "PolyLite",
+            "Color": "#2dccd3",
+            "Name": "Polymaker Teal",
+            "Owned": false,
+            "Transmissivity": 1,
+            "Type": "ABS",
+            "uuid": "{f6deca44-8865-9792-57ee-464162607e83}"
+        },
+        {
+            "Brand": "PolyLite",
+            "Color": "#008dc3",
+            "Name": "Pop Blue",
+            "Owned": false,
+            "Transmissivity": 1,
+            "Type": "ASA",
+            "uuid": "{8ee90930-e65e-14f6-bd46-c62f18b3599e}"
+        },
+        {
+            "Brand": "PolyLite",
+            "Color": "#77d730",
+            "Name": "Pop Green",
+            "Owned": false,
+            "Transmissivity": 1,
+            "Type": "ASA",
+            "uuid": "{82cac757-f261-f428-6cae-31c8cae1a6e9}"
+        },
+        {
+            "Brand": "PolyLite",
+            "Color": "#d83076",
+            "Name": "Pop Pink",
+            "Owned": false,
+            "Transmissivity": 1,
+            "Type": "ASA",
+            "uuid": "{1c4bfa7e-8ed5-8537-1ce2-e207d8b0f0c2}"
+        },
+        {
+            "Brand": "PolyLite",
+            "Color": "#6e3fa3",
+            "Name": "Purple",
+            "Owned": false,
+            "Transmissivity": 1,
+            "Type": "PETG",
+            "uuid": "{e7948a85-fe63-1888-ef31-a2e7010ec7fc}"
+        },
+        {
+            "Brand": "BambuLab Basic",
+            "Color": "#9e007e",
+            "Name": "Purple",
+            "Owned": false,
+            "Transmissivity": 2.5,
+            "Type": "PETG",
+            "uuid": "{a774bbcb-ff08-4a4a-b9a4-cd5250808908}"
+        },
+        {
+            "Brand": "PolyLite",
+            "Color": "#7758b3",
+            "Name": "Purple",
+            "Owned": false,
+            "Transmissivity": 0.5,
+            "Type": "ASA",
+            "uuid": "{dc892b26-bc7d-54b5-ab0c-b38dc7d532ae}"
+        },
+        {
+            "Brand": "PolyLite",
+            "Color": "#6c47b2",
+            "Name": "Purple",
+            "Owned": false,
+            "Transmissivity": 0.5,
+            "Type": "PLA",
+            "uuid": "{adb8d7cc-85b4-7435-3cbb-0da4620dc5a6}"
+        },
+        {
+            "Brand": "PolyLite",
+            "Color": "#6e3fa3",
+            "Name": "Purple",
+            "Owned": false,
+            "Transmissivity": 1,
+            "Type": "ABS",
+            "uuid": "{38ae361c-6726-59ff-951b-7488362153ec}"
+        },
+        {
+            "Brand": "PolyLite",
+            "Color": "#de4343",
+            "Name": "Red",
+            "Owned": false,
+            "Transmissivity": 5,
+            "Type": "ABS",
+            "uuid": "{e88c0202-0ef0-0e39-5878-b8256ea0b11d}"
+        },
+        {
+            "Brand": "BambuLab Basic",
+            "Color": "#c00d1e",
+            "Name": "Red",
+            "Owned": false,
+            "Transmissivity": 4,
+            "Type": "PLA",
+            "uuid": "{4fb13a86-6187-4300-95f2-ac2c877aae5e}"
+        },
+        {
+            "Brand": "PolyLite",
+            "Color": "#af231c",
+            "Name": "Red",
+            "Owned": false,
+            "Transmissivity": 1.5,
+            "Type": "ASA",
+            "uuid": "{cd521295-bd86-dbbd-54ac-8cd1f53970fe}"
+        },
+        {
+            "Brand": "Elegoo",
+            "Color": "#f11405",
+            "Name": "Red",
+            "Owned": false,
+            "Transmissivity": 3.5,
+            "Type": "PLA",
+            "uuid": "{1dea4133-a9f2-4250-ad97-e8e105835dc6}"
+        },
+        {
+            "Brand": "BambuLab Basic",
+            "Color": "#7d1112",
+            "Name": "Red",
+            "Owned": false,
+            "Transmissivity": 2.5,
+            "Type": "PETG",
+            "uuid": "{262542bd-6819-4652-a835-3630338da515}"
+        },
+        {
+            "Brand": "PolyLite",
+            "Color": "#e72f1d",
+            "Name": "Red",
+            "Owned": false,
+            "Transmissivity": 1.5,
+            "Type": "PLA",
+            "uuid": "{65a780bb-6c34-41da-ad5d-d4465443673c}"
+        },
+        {
+            "Brand": "PolyLite",
+            "Color": "#de4343",
+            "Name": "Red",
+            "Owned": false,
+            "Transmissivity": 2.5,
+            "Type": "PETG",
+            "uuid": "{b80e2575-b22d-f9ec-4fc2-05656a52fe5e}"
+        },
+        {
+            "Brand": "PolyLite",
+            "Color": "#75787b",
+            "Name": "Silver",
+            "Owned": false,
+            "Transmissivity": 0.3,
+            "Type": "PETG",
+            "uuid": "{8ab05110-af53-5916-6dc8-ad8d0fba86b1}"
+        },
+        {
+            "Brand": "BambuLab Basic",
+            "Color": "#a6a9aa",
+            "Name": "Silver",
+            "Owned": false,
+            "Transmissivity": 0.5,
+            "Type": "PLA",
+            "uuid": "{940c9f5c-e618-4a2a-b11b-f1de28e7895e}"
+        },
+        {
+            "Brand": "PolyLite",
+            "Color": "#b17137",
+            "Name": "Starlight Jupiter",
+            "Owned": false,
+            "Transmissivity": 2.5,
+            "Type": "PLA",
+            "uuid": "{58d74320-9fbf-14bd-b2ec-215df451da2c}"
+        },
+        {
+            "Brand": "PolyLite",
+            "Color": "#c3c6e2",
+            "Name": "Starlight Mercury",
+            "Owned": false,
+            "Transmissivity": 2.5,
+            "Type": "PLA",
+            "uuid": "{948db163-a45a-0357-f63b-3a9bb1e0c42d}"
+        },
+        {
+            "Brand": "PolyLite",
+            "Color": "#1284a2",
+            "Name": "Starlight Neptune",
+            "Owned": false,
+            "Transmissivity": 2.8,
+            "Type": "PLA",
+            "uuid": "{12f9523e-c622-4f1a-7c72-72391ece7143}"
+        },
+        {
+            "Brand": "PolyLite",
+            "Color": "#616469",
+            "Name": "Steel Grey",
+            "Owned": false,
+            "Transmissivity": 1,
+            "Type": "PLA",
+            "uuid": "{d23c2267-0632-8fff-8132-3c2e0bcceb8c}"
+        },
+        {
+            "Brand": "PolyLite",
+            "Color": "#40719a",
+            "Name": "Stone Blue",
+            "Owned": false,
+            "Transmissivity": 0.5,
+            "Type": "PLA",
+            "uuid": "{9a71c2a7-8707-9eb6-95a4-04f7a85669eb}"
+        },
+        {
+            "Brand": "PolyLite",
+            "Color": "#7ee2a0",
+            "Name": "Temp Green-Lime (Cold)",
+            "Owned": false,
+            "Transmissivity": 7,
+            "Type": "PLA",
+            "uuid": "{de1db32d-4b1c-cf79-835f-932ee8df4c2d}"
+        },
+        {
+            "Brand": "PolyLite",
+            "Color": "#dbde7b",
+            "Name": "Temp Green-Lime (Hot)",
+            "Owned": false,
+            "Transmissivity": 8,
+            "Type": "PLA",
+            "uuid": "{e4f8df07-ba91-5501-2ba2-a011fcd3638d}"
+        },
+        {
+            "Brand": "PolyLite",
+            "Color": "#4734aa",
+            "Name": "Temp Purple-Pink-Translucent (Cold)",
+            "Owned": false,
+            "Transmissivity": 4,
+            "Type": "PLA",
+            "uuid": "{867f2b7a-435a-bf75-3302-7d10f704ff2f}"
+        },
+        {
+            "Brand": "PolyLite",
+            "Color": "#e3d4cd",
+            "Name": "Temp Purple-Pink-Translucent (Hot)",
+            "Owned": false,
+            "Transmissivity": 13,
+            "Type": "PLA",
+            "uuid": "{ef7a81cd-e6fd-4063-5c12-b6efca6efea5}"
+        },
+        {
+            "Brand": "PolyLite",
+            "Color": "#f36fa9",
+            "Name": "Temp Purple-Pink-Translucent (Med)",
+            "Owned": false,
+            "Transmissivity": 10,
+            "Type": "PLA",
+            "uuid": "{b8365f3d-3ceb-f9a3-607d-5daefc915521}"
+        },
+        {
+            "Brand": "PolyLite",
+            "Color": "#06038d",
+            "Name": "Translucent Blue",
+            "Owned": false,
+            "Transmissivity": 2.5,
+            "Type": "PETG",
+            "uuid": "{9e2bbd3e-7f66-e01f-fbc8-e902731c84bd}"
+        },
+        {
+            "Brand": "PolyLite",
+            "Color": "#009a44",
+            "Name": "Translucent Green",
+            "Owned": false,
+            "Transmissivity": 4.5,
+            "Type": "PETG",
+            "uuid": "{d52906f0-58e4-8acb-b222-ddfc12fd584a}"
+        },
+        {
+            "Brand": "PolyLite",
+            "Color": "#cb333b",
+            "Name": "Translucent Red",
+            "Owned": false,
+            "Transmissivity": 7,
+            "Type": "PETG",
+            "uuid": "{052bd02e-08e1-7a8d-b4b6-5fa7759e60aa}"
+        },
+        {
+            "Brand": "BambuLab Basic",
+            "Color": "#ffffff",
+            "Name": "Transparent",
+            "Owned": false,
+            "Transmissivity": 50,
+            "Type": "PETG",
+            "uuid": "{83f4eaa1-eb2b-4705-9e92-e95d3fbecfbb}"
+        },
+        {
+            "Brand": "PolyLite",
+            "Color": "#ffb46e",
+            "Name": "UV Orange",
+            "Owned": false,
+            "Transmissivity": 14,
+            "Type": "PLA",
+            "uuid": "{f1920262-dae3-4881-51a5-fc1ccb12b4bc}"
+        },
+        {
+            "Brand": "BambuLab Basic",
+            "Color": "#ffffff",
+            "Name": "White",
+            "Owned": false,
+            "Transmissivity": 3.5,
+            "Type": "PETG",
+            "uuid": "{b4e82e5b-8cc1-4cbb-976d-8aec327443b2}"
+        },
+        {
+            "Brand": "PolyLite",
+            "Color": "#ffffff",
+            "Name": "White",
+            "Owned": false,
+            "Transmissivity": 0.5,
+            "Type": "ASA",
+            "uuid": "{9a08597e-9167-b47c-3c3c-25a4b5d291ec}"
+        },
+        {
+            "Brand": "PolyLite",
+            "Color": "#e2dedb",
+            "Name": "White",
+            "Owned": false,
+            "Transmissivity": 5,
+            "Type": "PLA",
+            "uuid": "{1800e8df-9e84-7c9a-088d-ac7b98baf869}"
+        },
+        {
+            "Brand": "PolyLite",
+            "Color": "#ffffff",
+            "Name": "White",
+            "Owned": false,
+            "Transmissivity": 2.5,
+            "Type": "PETG",
+            "uuid": "{1ff93ee6-d9a7-7690-83a3-9e69df4dbb2c}"
+        },
+        {
+            "Brand": "PolyLite",
+            "Color": "#ffffff",
+            "Name": "White",
+            "Owned": false,
+            "Transmissivity": 4.5,
+            "Type": "ABS",
+            "uuid": "{bcace181-0ec7-84c4-29e0-9eccf04f8232}"
+        },
+        {
+            "Brand": "PolyLite",
+            "Color": "#e0191e",
+            "Name": "Wine Red",
+            "Owned": false,
+            "Transmissivity": 1,
+            "Type": "PLA",
+            "uuid": "{2186d882-a9cd-c8a3-2cce-f5ae193c70da}"
+        },
+        {
+            "Brand": "BambuLab Basic",
+            "Color": "#fce300",
+            "Name": "Yellow",
+            "Owned": false,
+            "Transmissivity": 6,
+            "Type": "PETG",
+            "uuid": "{b3ed312f-817d-436d-919d-d44492273b2b}"
+        },
+        {
+            "Brand": "PolyLite",
+            "Color": "#f3b400",
+            "Name": "Yellow",
+            "Owned": false,
+            "Transmissivity": 10.5,
+            "Type": "PLA",
+            "uuid": "{adb2688a-7093-bb62-1d09-6946017d4be6}"
+        },
+        {
+            "Brand": "BambuLab Basic",
+            "Color": "#fce300",
+            "Name": "Yellow",
+            "Owned": false,
+            "Transmissivity": 6,
+            "Type": "PLA",
+            "uuid": "{3d555b4e-0304-423a-b0b7-2a09bbaf8186}"
+        },
+        {
+            "Brand": "PolyLite",
+            "Color": "#ffc845",
+            "Name": "Yellow",
+            "Owned": false,
+            "Transmissivity": 10.5,
+            "Type": "ABS",
+            "uuid": "{242a44cf-54c4-0415-2d75-0298304fbd31}"
+        },
+        {
+            "Brand": "PolyLite",
+            "Color": "#ffc845",
+            "Name": "Yellow",
+            "Owned": false,
+            "Transmissivity": 7.5,
+            "Type": "PETG",
+            "uuid": "{7a6b73d4-dfdd-064c-3d18-e7fc227dd3c8}"
+        },
+        {
+            "Brand": "PolyLite",
+            "Color": "#ffe800",
+            "Name": "Yellow",
+            "Owned": false,
+            "Transmissivity": 3.5,
+            "Type": "ASA",
+            "uuid": "{c010db4d-508e-a50e-9bd9-ccf35511b2e4}"
+        },
+        {
+            "Brand": "Polylite",
+            "Color": "#ffff00",
+            "Name": "Yellow v2",
+            "Owned": false,
+            "Transmissivity": 14.3,
+            "Type": "PLA",
+            "uuid": "{d32464c3-9e23-43da-93ba-86f205820fb0}"
         }
-      ]
-    }
-  ]
+    ]
 }

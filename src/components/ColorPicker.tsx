@@ -9,11 +9,14 @@ interface ColorPickerProps {
   initialTd?: number;
 }
 
-interface FilamentColor {
-  name: string;
-  color: string;
-  td: number;
-  id?: string;
+interface Filament {
+  Brand: string;
+  Color: string;
+  Name: string;
+  Owned: boolean;
+  Transmissivity: number;
+  Type: string;
+  uuid: string;
 }
 
 // Função para calcular a luminosidade de uma cor
@@ -31,74 +34,58 @@ const calculateLuminance = (color: string): number => {
   return 0.2126 * r + 0.7152 * g + 0.0722 * b;
 };
 
-// Função para sugerir TD baseado na luminância
-const suggestTD = (luminance: number): number => {
-  // Cores escuras (luminância baixa) precisam de menos camadas
-  // Cores claras (luminância alta) precisam de mais camadas
-  if (luminance < 0.1) return 0.6;       // Cores extremamente escuras (preto)
-  if (luminance < 0.2) return 1.2;       // Cores muito escuras
-  if (luminance < 0.3) return 2.0;       // Cores escuras
-  if (luminance < 0.4) return 3.0;       // Cores médio-escuras
-  if (luminance < 0.5) return 4.0;       // Cores médias
-  if (luminance < 0.6) return 5.0;       // Cores médio-claras
-  if (luminance < 0.7) return 6.0;       // Cores claras
-  if (luminance < 0.8) return 7.0;       // Cores muito claras
-  if (luminance < 0.9) return 8.5;       // Cores extremamente claras
-  return 10.0;                           // Branco puro e cores próximas
+// Função para sugerir Transmissivity baseado na luminância
+const suggestTransmissivity = (luminance: number): number => {
+  // Cores escuras (luminância baixa) precisam de menos distância
+  // Cores claras (luminância alta) precisam de mais distância
+  if (luminance < 0.1) return 0.3;       // Cores extremamente escuras (preto)
+  if (luminance < 0.2) return 0.6;       // Cores muito escuras
+  if (luminance < 0.3) return 1.0;       // Cores escuras
+  if (luminance < 0.4) return 1.5;       // Cores médio-escuras
+  if (luminance < 0.5) return 2.0;       // Cores médias
+  if (luminance < 0.6) return 2.5;       // Cores médio-claras
+  if (luminance < 0.7) return 3.0;       // Cores claras
+  if (luminance < 0.8) return 3.5;       // Cores muito claras
+  if (luminance < 0.9) return 4.0;       // Cores extremamente claras
+  return 4.5;                            // Branco puro e cores próximas
 };
 
 const ColorPicker: React.FC<ColorPickerProps> = ({ 
   onColorSelect, 
   onClose,
   initialColor = '#000000',
-  initialTd = 1
+  initialTd = 0.3
 }) => {
   const [activeTab, setActiveTab] = useState<string>('custom');
   const [selectedColor, setSelectedColor] = useState(initialColor);
   const [customTd, setCustomTd] = useState(initialTd);
-  const [availableColors, setAvailableColors] = useState<FilamentColor[]>([]);
-  const [brands] = useState<string[]>(['custom', ...filaments.brands.map(brand => brand.name)]);
+  const [availableColors, setAvailableColors] = useState<Filament[]>([]);
+  const [brands] = useState<string[]>(['custom', ...Array.from(new Set(filaments.Filaments.map(f => f.Type)))]);
 
   // Atualiza o TD automaticamente quando a cor muda no modo custom
   useEffect(() => {
     if (activeTab === 'custom') {
       const luminance = calculateLuminance(selectedColor);
-      const suggestedTd = suggestTD(luminance);
+      const suggestedTd = suggestTransmissivity(luminance);
       setCustomTd(suggestedTd);
     }
   }, [selectedColor, activeTab]);
 
-  // Atualiza as cores disponíveis quando a marca é selecionada
+  // Atualiza as cores disponíveis quando o tipo é selecionado
   useEffect(() => {
     if (activeTab === 'custom') {
       setAvailableColors([]);
       return;
     }
 
-    const brand = filaments.brands.find(b => b.name === activeTab);
-    if (brand) {
-      const material = brand.materials.find(m => m.type === 'PLA'); // PLA por padrão
-      if (material) {
-        const colors: FilamentColor[] = [];
-        material.variants.forEach(variant => {
-          variant.filaments.forEach(filament => {
-            colors.push({
-              name: filament.name,
-              color: filament.color,
-              td: filament.td,
-              id: filament.name.match(/\(([^)]+)\)/)?.[1] // Extrai o ID entre parênteses
-            });
-          });
-        });
-        setAvailableColors(colors);
-      }
-    }
+    const typeFilaments = filaments.Filaments.filter(f => f.Type === activeTab);
+    setAvailableColors(typeFilaments);
   }, [activeTab]);
 
-  const handleColorSelect = (color: FilamentColor) => {
-    setSelectedColor(color.color);
-    setCustomTd(color.td);
-    onColorSelect(color.color, color.td);
+  const handleColorSelect = (filament: Filament) => {
+    setSelectedColor(filament.Color);
+    setCustomTd(filament.Transmissivity);
+    onColorSelect(filament.Color, filament.Transmissivity);
     onClose();
   };
 
@@ -113,13 +100,13 @@ const ColorPicker: React.FC<ColorPickerProps> = ({
         <h3>Select Color</h3>
         
         <div className="tabs">
-          {brands.map((brand) => (
+          {brands.map((type) => (
             <button
-              key={brand}
-              className={`tab ${activeTab === brand ? 'active' : ''}`}
-              onClick={() => setActiveTab(brand)}
+              key={type}
+              className={`tab ${activeTab === type ? 'active' : ''}`}
+              onClick={() => setActiveTab(type)}
             >
-              {brand === 'custom' ? 'Custom' : brand}
+              {type === 'custom' ? 'Custom' : type}
             </button>
           ))}
         </div>
@@ -141,7 +128,7 @@ const ColorPicker: React.FC<ColorPickerProps> = ({
                 />
               </div>
 
-              <label>Transmission Distance (layers):</label>
+              <label>Transmission Distance (mm):</label>
               <input
                 type="number"
                 className="td-input"
@@ -159,19 +146,27 @@ const ColorPicker: React.FC<ColorPickerProps> = ({
           ) : (
             <>
               {availableColors.length > 0 ? (
-                <div className="color-grid">
-                  {availableColors.map((color, index) => (
-                    <div
-                      key={index}
-                      className={`color-option`}
-                      style={{ backgroundColor: color.color }}
-                      onClick={() => handleColorSelect(color)}
-                    >
-                      <div className="color-tooltip">
-                        {color.name}
-                        {color.id && ` (${color.id})`}
-                        <br />
-                        TD: {color.td} layers
+                <div>
+                  {Array.from(new Set(availableColors.map(f => f.Brand))).map(brand => (
+                    <div key={brand} className="filament-type-section">
+                      <div className="filament-type-title">{brand}</div>
+                      <div className="color-grid">
+                        {availableColors
+                          .filter(f => f.Brand === brand)
+                          .map((filament) => (
+                            <div
+                              key={filament.uuid}
+                              className={`color-option`}
+                              style={{ backgroundColor: filament.Color }}
+                              onClick={() => handleColorSelect(filament)}
+                            >
+                              <div className="color-tooltip">
+                                {filament.Name}
+                                <br />
+                                TD: {filament.Transmissivity.toFixed(1)} mm
+                              </div>
+                            </div>
+                          ))}
                       </div>
                     </div>
                   ))}

@@ -13,10 +13,11 @@
 
 .color-picker-container {
   background-color: #1e1e1e;
-  border-radius: 8px;
   padding: 20px;
-  width: 320px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+  width: 400px;
+  max-width: 90vw;
   color: #fff;
 }
 
@@ -30,42 +31,41 @@
 /* Sistema de abas */
 .tabs {
   display: flex;
-  gap: 4px;
+  gap: 8px;
   margin-bottom: 15px;
-  padding: 0 2px;
+  max-height: 80px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  flex-wrap: wrap;
+  padding-right: 8px;
 }
 
 .tab {
-  padding: 8px 12px;
-  background-color: #2d2d2d;
+  padding: 6px 12px;
   border: none;
+  background-color: #2d2d2d;
   border-radius: 4px;
-  color: #ccc;
   cursor: pointer;
-  font-size: 0.9em;
-  transition: all 0.2s;
-  flex: 1;
-  text-align: center;
+  transition: background-color 0.2s;
+  color: #fff;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .tab:hover {
   background-color: #3d3d3d;
-  color: #fff;
 }
 
 .tab.active {
-  background-color: #61dafb;
-  color: #000;
+  background-color: #007bff;
+  color: white;
 }
 
 .color-picker-section {
-  margin-bottom: 15px;
-  background-color: #2d2d2d;
-  border-radius: 4px;
-  padding: 12px;
+  margin-top: 15px;
+  max-height: 60vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 10px;
 }
 
 .color-picker-section label {
@@ -96,27 +96,46 @@
   border-color: #61dafb;
 }
 
+/* Seção de tipo de filamento */
+.filament-type-section {
+  margin-bottom: 25px;
+}
+
+.filament-type-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  margin: 0 0 15px 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
 /* Grid de cores */
 .color-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 8px;
-  margin-top: 10px;
-}
-
-.color-option {
+  gap: 12px;
+  grid-template-columns: repeat(5, 1fr);
+  padding: 10px;
   position: relative;
   width: 100%;
-  padding-bottom: 100%;
+  box-sizing: border-box;
+  margin-bottom: 10px; /* Espaço entre grids de diferentes tipos */
+}
+
+/* Tamanho fixo para todas as cores */
+.color-option {
+  position: relative;
+  width: 50px; /* Aumentado */
+  height: 50px; /* Aumentado */
   border-radius: 4px;
   cursor: pointer;
-  border: 2px solid transparent;
-  transition: all 0.2s;
+  transition: transform 0.2s;
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .color-option:hover {
-  transform: scale(1.05);
-  z-index: 1;
+  transform: scale(1.1);
+  z-index: 2;
 }
 
 .color-option.selected {
@@ -124,24 +143,63 @@
 }
 
 .color-tooltip {
+  display: none;
   position: absolute;
-  bottom: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  background-color: #000;
-  color: #fff;
-  padding: 4px 8px;
+  background-color: rgba(0, 0, 0, 0.9);
+  color: white;
+  padding: 6px 10px;
   border-radius: 4px;
-  font-size: 0.8em;
+  font-size: 12px;
   white-space: nowrap;
   pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.2s;
-  z-index: 2;
+  z-index: 1000;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
+/* Posições do tooltip */
 .color-option:hover .color-tooltip {
-  opacity: 1;
+  display: block;
+}
+
+/* Primeira linha - tooltip abaixo */
+.color-option:nth-child(-n+5):hover .color-tooltip {
+  top: calc(100% + 5px);
+  bottom: auto;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+/* Última coluna - tooltip à esquerda */
+.color-option:nth-child(5n):hover .color-tooltip {
+  right: calc(100% + 5px);
+  left: auto;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+/* Primeira coluna - tooltip à direita */
+.color-option:nth-child(5n-4):hover .color-tooltip {
+  left: calc(100% + 5px);
+  right: auto;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+/* Posição padrão - tooltip acima */
+.color-option:not(:nth-child(-n+5)):not(:nth-child(5n)):not(:nth-child(5n-4)):hover .color-tooltip {
+  bottom: calc(100% + 5px);
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+/* Removendo classes de tamanho que não são mais necessárias */
+.color-grid.size-normal .color-option,
+.color-grid.size-medium .color-option,
+.color-grid.size-small .color-option,
+.color-grid.size-tiny .color-option {
+  width: 50px;
+  height: 50px;
 }
 
 /* Seção de cor personalizada */
@@ -153,17 +211,17 @@
   display: flex;
   gap: 10px;
   align-items: center;
-  width: 100%;
   margin-bottom: 15px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .color-input-container input[type="color"] {
-  -webkit-appearance: none;
   width: 40px;
   height: 40px;
+  padding: 0;
   border: none;
   border-radius: 4px;
-  padding: 0;
   cursor: pointer;
   flex-shrink: 0;
 }
@@ -180,31 +238,28 @@
 .color-input-container input[type="text"] {
   flex: 1;
   min-width: 0;
-  padding: 8px 12px;
+  padding: 8px;
   border: 1px solid #444;
   border-radius: 4px;
-  background-color: #1e1e1e;
+  background-color: #2d2d2d;
   color: #fff;
-  font-family: monospace;
 }
 
 /* Campo TD */
 .td-input {
-  width: calc(100% - 24px); /* Subtrai o padding total (12px de cada lado) */
-  padding: 8px 12px;
+  width: calc(100% - 24px);
+  padding: 8px;
   border: 1px solid #444;
   border-radius: 4px;
-  background-color: #1e1e1e;
+  background-color: #2d2d2d;
   color: #fff;
-  font-size: 0.9em;
   margin-bottom: 15px;
-  box-sizing: border-box;
 }
 
 .td-input:focus,
 .color-input-container input[type="text"]:focus {
   outline: none;
-  border-color: #61dafb;
+  border-color: #007bff;
 }
 
 /* Botões */
@@ -212,31 +267,29 @@
   display: flex;
   gap: 10px;
   margin-top: 5px;
-  justify-content: flex-end;
 }
 
 .color-picker-buttons button {
-  padding: 8px 16px;
+  flex: 1;
+  padding: 8px;
   border: none;
   border-radius: 4px;
-  font-size: 0.9em;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: background-color 0.2s;
 }
 
 .color-picker-buttons button:first-child {
-  background-color: #61dafb;
-  color: #000;
+  background-color: #007bff;
+  color: white;
 }
 
 .color-picker-buttons button:last-child {
-  background-color: #444;
+  background-color: #2d2d2d;
   color: #fff;
 }
 
 .color-picker-buttons button:hover {
   opacity: 0.9;
-  transform: translateY(-1px);
 }
 
 input:disabled {
@@ -252,4 +305,28 @@ input:disabled {
 
 .color-grid {
   animation: fadeIn 0.3s ease-in-out;
+}
+
+/* Scrollbar personalizada */
+.tabs::-webkit-scrollbar,
+.color-picker-section::-webkit-scrollbar {
+  width: 8px;
+  height: 0; /* Remove scrollbar horizontal */
+}
+
+.tabs::-webkit-scrollbar-track,
+.color-picker-section::-webkit-scrollbar-track {
+  background: #2d2d2d;
+  border-radius: 4px;
+}
+
+.tabs::-webkit-scrollbar-thumb,
+.color-picker-section::-webkit-scrollbar-thumb {
+  background: #444;
+  border-radius: 4px;
+}
+
+.tabs::-webkit-scrollbar-thumb:hover,
+.color-picker-section::-webkit-scrollbar-thumb:hover {
+  background: #555;
 } 
