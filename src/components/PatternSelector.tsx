@@ -15,14 +15,14 @@ const PatternSelector: React.FC<PatternSelectorProps> = ({ onSelectPattern, imag
         { color: '#000000', heightPercentage: 10, td: 0.6 },   // Preto
         { color: '#666666', heightPercentage: 33, td: 1.4 },  // Cinza escuro
         { color: '#CCCCCC', heightPercentage: 66, td: 2.0 },  // Cinza claro
-        { color: '#FFFFFF', heightPercentage: 100, td: 2.0 }  // Branco
+        { color: '#FFFFFF', heightPercentage: 100, td: 4.0 }  // Branco
       ];
     } else if (pattern === 'grayscale-distributed') {
       newPattern = [
         { color: '#000000', heightPercentage: 25, td: 0.6 },
         { color: '#404040', heightPercentage: 50, td: 1.4 },
         { color: '#808080', heightPercentage: 75, td: 2.0 },
-        { color: '#ffffff', heightPercentage: 100, td: 2.0 }
+        { color: '#ffffff', heightPercentage: 100, td: 5.0 }
       ];
     } else if (pattern === 'auto') {
       if (imageData && imageData.data.length > 0) {
@@ -33,7 +33,7 @@ const PatternSelector: React.FC<PatternSelectorProps> = ({ onSelectPattern, imag
           { color: '#404040', heightPercentage: 40, td: 1.4 },
           { color: '#808080', heightPercentage: 60, td: 1.4 },
           { color: '#C0C0C0', heightPercentage: 80, td: 2.0 },
-          { color: '#FFFFFF', heightPercentage: 100, td: 2.0 }
+          { color: '#FFFFFF', heightPercentage: 100, td: 5.0 }
         ];
       }
     }

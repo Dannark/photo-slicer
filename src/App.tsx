@@ -16,10 +16,10 @@ function App() {
   const [baseThickness, setBaseThickness] = useState(DEFAULT_BASE_LAYERS * DEFAULT_LAYER_HEIGHT);
   const [resolution, setResolution] = useState(DEFAULT_RESOLUTION);
   const [layers, setLayers] = useState<LayerConfig[]>([
-    { color: '#000000', heightPercentage: 10, td: 0.1 },   // Preto
-    { color: '#666666', heightPercentage: 33, td: 0.1 },  // Cinza escuro
-    { color: '#CCCCCC', heightPercentage: 66, td: 0 },  // Cinza claro
-    { color: '#FFFFFF', heightPercentage: 100, td: 2.0 }  // Branco
+    { color: '#000000', heightPercentage: 10, td: 0.6 },   // Preto
+    { color: '#666666', heightPercentage: 33, td: 1.4 },  // Cinza escuro
+    { color: '#CCCCCC', heightPercentage: 66, td: 2.0 },  // Cinza claro
+    { color: '#FFFFFF', heightPercentage: 100, td: 4.0 }  // Branco
   ]);
   const [imageData, setImageData] = useState<ImageData | undefined>(undefined);
 

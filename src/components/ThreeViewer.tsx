@@ -25,13 +25,14 @@ interface HeightMapRef {
 
 const HeightMap = React.forwardRef<HeightMapRef, {
   texture: THREE.Texture;
-  baseHeight: number; // Agora representa a altura total
+  baseHeight: number;
   baseThickness: number;
   layers: LayerConfig[];
   resolution: number;
   isSteppedMode: boolean;
+  showTDMode: boolean;
   layerHeight: number;
-}>(({ texture, baseHeight, baseThickness, layers, resolution, isSteppedMode, layerHeight }, ref) => {
+}>(({ texture, baseHeight, baseThickness, layers, resolution, isSteppedMode, showTDMode, layerHeight }, ref) => {
   const meshRef = useRef<THREE.Mesh>(null);
   const materialRef = useRef<THREE.ShaderMaterial>(null);
   const { scene } = useThree();
@@ -58,10 +59,12 @@ const HeightMap = React.forwardRef<HeightMapRef, {
     if (meshRef.current) {
       const initialColors = Array(5).fill(null).map(() => new THREE.Color(0x000000));
       const initialHeights = Array(5).fill(1.0);
+      const initialTDs = Array(5).fill(0.0);
 
       layers.forEach((layer, index) => {
         initialColors[index].set(layer.color);
         initialHeights[index] = layer.heightPercentage / 100;
+        initialTDs[index] = layer.td;
       });
 
       const material = new THREE.ShaderMaterial({
@@ -70,7 +73,9 @@ const HeightMap = React.forwardRef<HeightMapRef, {
           baseHeight: { value: baseHeight },
           layerColors: { value: initialColors },
           layerHeights: { value: initialHeights },
+          layerTDs: { value: initialTDs },
           isSteppedMode: { value: isSteppedMode },
+          showTDMode: { value: showTDMode },
           layerHeight: { value: layerHeight },
           numLayers: { value: layers.length },
           baseThickness: { value: baseThickness },
@@ -126,27 +131,51 @@ const HeightMap = React.forwardRef<HeightMapRef, {
         fragmentShader: `
           uniform vec3 layerColors[5];
           uniform float layerHeights[5];
+          uniform float layerTDs[5];
           uniform int numLayers;
           uniform float baseThickness;
           uniform float firstLayerHeight;
           uniform float layerHeight;
           uniform float baseHeight;
+          uniform bool isSteppedMode;
+          uniform bool showTDMode;
           varying float vLayerNumber;
           
+          vec3 interpolateColor(vec3 color1, vec3 color2, float factor) {
+            return mix(color1, color2, factor);
+          }
+
           void main() {
             vec3 color = layerColors[0];
             
             // Calcula o número total de camadas
             float additionalBaseThickness = max(0.0, baseThickness - firstLayerHeight);
             float additionalBaseLayers = floor(additionalBaseThickness / layerHeight);
-            float totalLayers = floor(baseHeight / layerHeight) + additionalBaseLayers + 1.0; // +1 para a primeira camada
+            float totalLayers = floor(baseHeight / layerHeight) + additionalBaseLayers + 1.0;
             
             // Normaliza o número da camada para o intervalo 0-1
             float normalizedLayer = (vLayerNumber - 1.0) / totalLayers;
             
-            for(int i = 1; i < 5; i++) {
-              if(i < numLayers && normalizedLayer >= layerHeights[i-1]) {
-                color = layerColors[i];
+            if (showTDMode) {
+              // Modo TD - Transição suave baseada no TD
+              vec3 previousColor = layerColors[0];
+              
+              for(int i = 1; i < 5; i++) {
+                if(i < numLayers && normalizedLayer >= layerHeights[i-1]) {
+                  float td = layerTDs[i];
+                  float layersForTransition = td / layerHeight;
+                  float currentLayerInSection = (normalizedLayer - layerHeights[i-1]) * totalLayers;
+                  float progress = min(1.0, currentLayerInSection / layersForTransition);
+                  color = interpolateColor(previousColor, layerColors[i], progress);
+                  previousColor = layerColors[i];
+                }
+              }
+            } else {
+              // Modo normal - Cores sólidas
+              for(int i = 1; i < 5; i++) {
+                if(i < numLayers && normalizedLayer >= layerHeights[i-1]) {
+                  color = layerColors[i];
+                }
               }
             }
             
@@ -158,7 +187,7 @@ const HeightMap = React.forwardRef<HeightMapRef, {
       materialRef.current = material;
       meshRef.current.material = material;
     }
-  }, [texture, baseHeight, baseThickness, layers, isSteppedMode, layerHeight]);
+  }, [texture, baseHeight, baseThickness, layers, isSteppedMode, showTDMode, layerHeight]);
 
   // Atualiza os uniforms quando necessário
   useEffect(() => {
@@ -166,17 +195,21 @@ const HeightMap = React.forwardRef<HeightMapRef, {
       try {
         const colors = Array(5).fill(null).map(() => new THREE.Color(0x000000));
         const heights = Array(5).fill(1.0);
+        const tds = Array(5).fill(0.0);
 
         layers.forEach((layer, index) => {
           colors[index].set(layer.color);
           heights[index] = layer.heightPercentage / 100;
+          tds[index] = layer.td;
         });
 
         materialRef.current.uniforms.heightMap.value = texture;
         materialRef.current.uniforms.baseHeight.value = baseHeight;
         materialRef.current.uniforms.layerColors.value = colors;
         materialRef.current.uniforms.layerHeights.value = heights;
+        materialRef.current.uniforms.layerTDs.value = tds;
         materialRef.current.uniforms.isSteppedMode.value = isSteppedMode;
+        materialRef.current.uniforms.showTDMode.value = showTDMode;
         materialRef.current.uniforms.layerHeight.value = layerHeight;
         materialRef.current.uniforms.numLayers.value = layers.length;
         materialRef.current.uniforms.baseThickness.value = baseThickness;
@@ -187,7 +220,7 @@ const HeightMap = React.forwardRef<HeightMapRef, {
         console.error('Erro ao atualizar uniforms:', error);
       }
     }
-  }, [texture, baseHeight, baseThickness, layers, isSteppedMode, layerHeight]);
+  }, [texture, baseHeight, baseThickness, layers, isSteppedMode, showTDMode, layerHeight]);
 
   const createGeometryWithHeight = () => {
     // Calcula as dimensões baseadas na proporção da imagem
@@ -442,6 +475,7 @@ const HeightMap = React.forwardRef<HeightMapRef, {
 const ThreeViewer: React.FC<ThreeViewerProps> = ({ imageUrl, baseHeight, baseThickness, layers, resolution, layerHeight }) => {
   const [texture, setTexture] = React.useState<THREE.Texture | null>(null);
   const [isSteppedMode, setIsSteppedMode] = React.useState(false);
+  const [showTDMode, setShowTDMode] = React.useState(true);
   const [showExportInfo, setShowExportInfo] = React.useState(false);
   const heightMapRef = useRef<HeightMapRef>(null);
 
@@ -483,6 +517,12 @@ const ThreeViewer: React.FC<ThreeViewerProps> = ({ imageUrl, baseHeight, baseThi
           {isSteppedMode ? 'Smooth View' : 'Layer View'}
         </button>
         <button
+          className={`preview-mode-button ${showTDMode ? 'active' : ''}`}
+          onClick={() => setShowTDMode(!showTDMode)}
+        >
+          {showTDMode ? 'Solid Colors' : 'TD View'}
+        </button>
+        <button
           className="preview-mode-button"
           onClick={() => setShowExportInfo(true)}
         >
@@ -508,6 +548,7 @@ const ThreeViewer: React.FC<ThreeViewerProps> = ({ imageUrl, baseHeight, baseThi
               layers={layers}
               resolution={resolution}
               isSteppedMode={isSteppedMode}
+              showTDMode={showTDMode}
               layerHeight={layerHeight}
             />
           )}
