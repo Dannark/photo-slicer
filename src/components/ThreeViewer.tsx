@@ -6,6 +6,7 @@ import { STLExporter } from 'three-stdlib';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils';
 import { LayerConfig } from './HeightControls';
 import ExportInfo from './ExportInfo';
+import { TD_DIVISOR } from '../constants/config';
 
 // Constantes de dimensão
 const MODEL_MAX_SIZE = 100;  // Dimensão máxima em mm
@@ -79,7 +80,8 @@ const HeightMap = React.forwardRef<HeightMapRef, {
           layerHeight: { value: layerHeight },
           numLayers: { value: layers.length },
           baseThickness: { value: baseThickness },
-          firstLayerHeight: { value: layerHeight * 2 }
+          firstLayerHeight: { value: layerHeight * 2 },
+          tdDivisor: { value: TD_DIVISOR }
         },
         vertexShader: `
           uniform sampler2D heightMap;
@@ -139,6 +141,7 @@ const HeightMap = React.forwardRef<HeightMapRef, {
           uniform float baseHeight;
           uniform bool isSteppedMode;
           uniform bool showTDMode;
+          uniform float tdDivisor;
           varying float vLayerNumber;
           
           vec3 interpolateColor(vec3 color1, vec3 color2, float factor) {
@@ -162,7 +165,8 @@ const HeightMap = React.forwardRef<HeightMapRef, {
               
               for(int i = 1; i < 5; i++) {
                 if(i < numLayers && normalizedLayer >= layerHeights[i-1]) {
-                  float td = layerTDs[i];
+                  // Dividimos o TD para obter a distância real de transição
+                  float td = layerTDs[i] / tdDivisor;
                   float layersForTransition = td / layerHeight;
                   float currentLayerInSection = (normalizedLayer - layerHeights[i-1]) * totalLayers;
                   float progress = min(1.0, currentLayerInSection / layersForTransition);
@@ -214,6 +218,7 @@ const HeightMap = React.forwardRef<HeightMapRef, {
         materialRef.current.uniforms.numLayers.value = layers.length;
         materialRef.current.uniforms.baseThickness.value = baseThickness;
         materialRef.current.uniforms.firstLayerHeight.value = layerHeight * 2;
+        materialRef.current.uniforms.tdDivisor.value = TD_DIVISOR;
         materialRef.current.needsUpdate = true;
 
       } catch (error) {

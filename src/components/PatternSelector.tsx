@@ -12,10 +12,10 @@ const PatternSelector: React.FC<PatternSelectorProps> = ({ onSelectPattern, imag
 
     if (pattern === 'grayscale-fixed') {
       newPattern = [
-        { color: '#000000', heightPercentage: 10, td: 0.6 },   // Preto
-        { color: '#666666', heightPercentage: 33, td: 1.4 },  // Cinza escuro
-        { color: '#CCCCCC', heightPercentage: 66, td: 2.0 },  // Cinza claro
-        { color: '#FFFFFF', heightPercentage: 100, td: 4.0 }  // Branco
+        { color: '#000000', heightPercentage: calculateNonLinearPercentage(0, 4), td: 0.6 },   // Preto
+        { color: '#666666', heightPercentage: calculateNonLinearPercentage(1, 4), td: 1.4 },  // Cinza escuro
+        { color: '#CCCCCC', heightPercentage: calculateNonLinearPercentage(2, 4), td: 2.8 },  // Cinza claro
+        { color: '#FFFFFF', heightPercentage: calculateNonLinearPercentage(3, 4), td: 5.0 }  // Branco
       ];
     } else if (pattern === 'grayscale-distributed') {
       newPattern = [
@@ -29,11 +29,11 @@ const PatternSelector: React.FC<PatternSelectorProps> = ({ onSelectPattern, imag
         newPattern = posterizeImage(imageData);
       } else {
         newPattern = [
-          { color: '#000000', heightPercentage: 20, td: 0.6 },
-          { color: '#404040', heightPercentage: 40, td: 1.4 },
-          { color: '#808080', heightPercentage: 60, td: 1.4 },
-          { color: '#C0C0C0', heightPercentage: 80, td: 2.0 },
-          { color: '#FFFFFF', heightPercentage: 100, td: 5.0 }
+          { color: '#000000', heightPercentage: calculateNonLinearPercentage(0, 5), td: 0.6 },
+          { color: '#404040', heightPercentage: calculateNonLinearPercentage(1, 5), td: 1.4 },
+          { color: '#808080', heightPercentage: calculateNonLinearPercentage(2, 5), td: 1.4 },
+          { color: '#C0C0C0', heightPercentage: calculateNonLinearPercentage(3, 5), td: 2.0 },
+          { color: '#FFFFFF', heightPercentage: calculateNonLinearPercentage(4, 5), td: 5.0 }
         ];
       }
     }
@@ -114,10 +114,18 @@ const PatternSelector: React.FC<PatternSelectorProps> = ({ onSelectPattern, imag
     
     // Ajusta as porcentagens após a ordenação
     pattern.forEach((layer, index) => {
-      layer.heightPercentage = ((index + 1) * 100) / numLevels;
+      layer.heightPercentage = calculateNonLinearPercentage(index, numLevels);
     });
 
     return pattern;
+  };
+
+  // Função para calcular a distribuição não-linear das porcentagens
+  const calculateNonLinearPercentage = (index: number, total: number): number => {
+    // Usando uma curva exponencial para distribuir os valores
+    // Expoente maior que 1 faz a curva crescer mais devagar no início e mais rápido no final
+    const normalizedValue = Math.pow((index + 1) / total, 2);
+    return Math.min(Math.round(normalizedValue * 100), 100);
   };
 
   return (

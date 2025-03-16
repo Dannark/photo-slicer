@@ -1,0 +1,1 @@
+export const TD_DIVISOR = 4; // Fator de conversão do TD para distância real em mm 

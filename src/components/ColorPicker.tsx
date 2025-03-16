@@ -54,7 +54,7 @@ const ColorPicker: React.FC<ColorPickerProps> = ({
   onColorSelect, 
   onClose,
   initialColor = '#000000',
-  initialTd = 0.3
+  initialTd = 0
 }) => {
   const [activeTab, setActiveTab] = useState<string>('custom');
   const [selectedColor, setSelectedColor] = useState(initialColor);
@@ -65,11 +65,14 @@ const ColorPicker: React.FC<ColorPickerProps> = ({
   // Atualiza o TD automaticamente quando a cor muda no modo custom
   useEffect(() => {
     if (activeTab === 'custom') {
-      const luminance = calculateLuminance(selectedColor);
-      const suggestedTd = suggestTransmissivity(luminance);
-      setCustomTd(suggestedTd);
+      // Se não houver TD inicial ou se a cor foi alterada do valor inicial
+      if (customTd === 0 || selectedColor !== initialColor) {
+        const luminance = calculateLuminance(selectedColor);
+        const suggestedTd = suggestTransmissivity(luminance);
+        setCustomTd(suggestedTd);
+      }
     }
-  }, [selectedColor, activeTab]);
+  }, [selectedColor, activeTab, initialColor, customTd]);
 
   // Atualiza as cores disponíveis quando o tipo é selecionado
   useEffect(() => {

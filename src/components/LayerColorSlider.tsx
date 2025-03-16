@@ -2,6 +2,7 @@ import React, { useRef, useEffect, useState } from 'react';
 import { LayerConfig } from './HeightControls';
 import ColorPicker from './ColorPicker';
 import PatternSelector from './PatternSelector';
+import { TD_DIVISOR } from '../constants/config';
 
 interface LayerColorSliderProps {
   layers: LayerConfig[];
@@ -24,6 +25,7 @@ const LayerColorSlider: React.FC<LayerColorSliderProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState<number | null>(null);
   const [hoveredY, setHoveredY] = useState<number | null>(null);
+  const [hoveredX, setHoveredX] = useState<number | null>(null);
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [originalPositions, setOriginalPositions] = useState<number[] | null>(null);
   const [selectedDividerIndex, setSelectedDividerIndex] = useState<number | null>(null);
@@ -97,6 +99,27 @@ const LayerColorSlider: React.FC<LayerColorSliderProps> = ({
     return `#${(r << 16 | g << 8 | b).toString(16).padStart(6, '0')}`;
   };
 
+  // Função para calcular a cor com base na posição e TD
+  const getColorAtPosition = (y: number, layers: LayerConfig[], totalHeight: number) => {
+    const normalizedY = y / totalHeight;
+    let previousColor = '#000000';
+    
+    for (let i = 0; i < layers.length; i++) {
+      const heightPercentage = layers[i].heightPercentage / 100;
+      if (normalizedY <= heightPercentage) {
+        // Se estiver no modo de transição suave
+        const td = layers[i].td / TD_DIVISOR; // Dividimos o TD para obter a distância real de transição
+        const layersForTransition = td / layerHeight;
+        const currentLayerInSection = (normalizedY - (i > 0 ? layers[i-1].heightPercentage / 100 : 0)) * (totalHeight / layerHeight);
+        const progress = Math.min(1, currentLayerInSection / layersForTransition);
+        
+        return interpolateColor(previousColor, layers[i].color, progress);
+      }
+      previousColor = layers[i].color;
+    }
+    return layers[layers.length - 1].color;
+  };
+
   const drawSlider = () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -138,38 +161,20 @@ const LayerColorSlider: React.FC<LayerColorSliderProps> = ({
     // Reset das variáveis para a coluna direita
     currentY = SLIDER_START_Y;
     accumulatedLayers = 0;
-    let previousColor = '#000000'; // Cor inicial (preto)
 
     // Desenha o slider - Coluna Direita (visualização com TD)
-    layers.forEach((layer, index) => {
-      const nextAccumulatedLayers = index < layers.length - 1 
-        ? Math.floor((layers[index].heightPercentage / 100) * totalLayers)
-        : totalLayers;
-      const layerCount = nextAccumulatedLayers - accumulatedLayers;
-      const sectionHeight = layerCount * layerPixelHeight;
-
-      // Calcula quantas camadas são necessárias para atingir a cor completa baseado no TD
-      const layersForFullColor = Math.ceil(layer.td / layerHeight);
+    for (let i = 0; i < totalLayers; i++) {
+      const y = SLIDER_START_Y + (i * layerPixelHeight);
+      const currentColor = getColorAtPosition(i * layerHeight, layers, totalHeight);
       
-      // Desenha a transição de cor
-      for (let i = 0; i < layerCount; i++) {
-        const y = currentY + (i * layerPixelHeight);
-        const progress = Math.min(1, i / layersForFullColor);
-        const currentColor = interpolateColor(previousColor, layer.color, progress);
-        
-        ctx.fillStyle = currentColor;
-        ctx.fillRect(RIGHT_COLUMN_X, y, COLUMN_WIDTH, layerPixelHeight);
-        
-        // Desenha a borda
-        ctx.strokeStyle = '#333';
-        ctx.lineWidth = 1;
-        ctx.strokeRect(RIGHT_COLUMN_X, y, COLUMN_WIDTH, layerPixelHeight);
-      }
-
-      previousColor = layer.color;
-      currentY += sectionHeight;
-      accumulatedLayers = nextAccumulatedLayers;
-    });
+      ctx.fillStyle = currentColor;
+      ctx.fillRect(RIGHT_COLUMN_X, y, COLUMN_WIDTH, layerPixelHeight);
+      
+      // Desenha a borda
+      ctx.strokeStyle = '#333';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(RIGHT_COLUMN_X, y, COLUMN_WIDTH, layerPixelHeight);
+    }
 
     // Desenha linhas tracejadas para cada camada
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
@@ -252,18 +257,21 @@ const LayerColorSlider: React.FC<LayerColorSliderProps> = ({
       }
 
       // Desenha o tooltip se o mouse estiver sobre esta seção
-      if (hoveredY !== null && hoveredY >= currentY && hoveredY <= currentY + sectionHeight) {
+      if (hoveredY !== null && hoveredX !== null && 
+          hoveredY >= currentY && hoveredY <= currentY + sectionHeight) {
         const startLayer = accumulatedLayers + 1;
         const endLayer = nextAccumulatedLayers;
         
-        // Verifica se está sobre uma divisória
-        const dividerY = currentY + sectionHeight;
-        const isOverDivider = Math.abs(hoveredY - dividerY) <= DRAG_HANDLE_HEIGHT/2;
+        // Verifica se o mouse está na coluna da direita (>= 50% da largura)
+        const isRightColumn = hoveredX >= CANVAS_WIDTH / 2;
         
         let tooltipText;
-        if (isOverDivider && index < layers.length - 1) {
-          tooltipText = `Layer ${endLayer}`;
+        if (isRightColumn) {
+          // Na coluna da direita, mostra a layer atual
+          const currentLayerNumber = Math.floor((hoveredY - SLIDER_START_Y) / layerPixelHeight) + 1;
+          tooltipText = `Layer ${currentLayerNumber}`;
         } else {
+          // Na coluna da esquerda, sempre mostra o range
           tooltipText = `Layers ${startLayer}-${endLayer}`;
         }
         
@@ -323,6 +331,7 @@ const LayerColorSlider: React.FC<LayerColorSliderProps> = ({
 
   const handleMouseMove = (e: React.MouseEvent) => {
     const { x, y } = getCanvasCoordinates(e);
+    setHoveredX(x);
     setHoveredY(y);
 
     // Verifica se o mouse está sobre alguma divisória
@@ -554,6 +563,8 @@ const LayerColorSlider: React.FC<LayerColorSliderProps> = ({
         onMouseUp={handleMouseUp}
         onMouseLeave={(e) => {
           handleMouseUp();
+          setHoveredY(null);
+          setHoveredX(null);
           setIsOverDivider(false);
         }}
         style={{ 
