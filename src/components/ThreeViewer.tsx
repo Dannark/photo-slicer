@@ -6,7 +6,9 @@ import { STLExporter } from 'three-stdlib';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils';
 import { LayerConfig } from './HeightControls';
 import ExportInfo from './ExportInfo';
+import ExportDropdown from './ExportDropdown';
 import { TD_DIVISOR } from '../constants/config';
+import { exportToSTL, exportToBambu3MF, exportToGeneric3MF, exportToPrusa3MF } from '../services/exportService';
 
 // Constantes de dimensão
 const MODEL_MAX_SIZE = 100;  // Dimensão máxima em mm
@@ -22,6 +24,8 @@ interface ThreeViewerProps {
 
 interface HeightMapRef {
   exportToSTL: () => void;
+  exportToGeneric3MF: () => void;
+  exportToPrusa3MF: () => void;
 }
 
 const HeightMap = React.forwardRef<HeightMapRef, {
@@ -36,7 +40,7 @@ const HeightMap = React.forwardRef<HeightMapRef, {
 }>(({ texture, baseHeight, baseThickness, layers, resolution, isSteppedMode, showTDMode, layerHeight }, ref) => {
   const meshRef = useRef<THREE.Mesh>(null);
   const materialRef = useRef<THREE.ShaderMaterial>(null);
-  const { scene } = useThree();
+  const { scene, gl, camera } = useThree();
 
   // Calcula as dimensões mantendo a proporção da imagem
   const calculateDimensions = (width: number, height: number) => {
@@ -261,28 +265,6 @@ const HeightMap = React.forwardRef<HeightMapRef, {
       return numLayers * layerHeight;
     };
 
-    // Mapeia as coordenadas x e y únicas para encontrar os vértices mais externos
-    const uniqueX = new Set<number>();
-    const uniqueY = new Set<number>();
-    
-    for (let i = 0; i < positions.length; i += 3) {
-      uniqueX.add(positions[i]);
-      uniqueY.add(positions[i + 1]);
-    }
-
-    const sortedX = Array.from(uniqueX).sort((a, b) => a - b);
-    const sortedY = Array.from(uniqueY).sort((a, b) => a - b);
-    const minX = sortedX[0];
-    const maxX = sortedX[sortedX.length - 1];
-    const minY = sortedY[0];
-    const maxY = sortedY[sortedY.length - 1];
-
-    // Arrays para armazenar os vértices das bordas por lado
-    const leftEdge: number[] = [];
-    const rightEdge: number[] = [];
-    const topEdge: number[] = [];
-    const bottomEdge: number[] = [];
-    
     // Primeiro, vamos mapear todos os vértices e suas alturas
     for (let i = 0; i < positions.length / 3; i++) {
       const idx = i * 3;
@@ -290,8 +272,8 @@ const HeightMap = React.forwardRef<HeightMapRef, {
       const y = positions[idx + 1];
 
       // Ajusta o mapeamento de pixels para considerar as dimensões proporcionais
-      const pixelX = Math.floor((x - minX) / (maxX - minX) * (canvas.width - 1));
-      const pixelY = Math.floor((y - minY) / (maxY - minY) * (canvas.height - 1));
+      const pixelX = Math.floor((x + dimensions.width/2) / dimensions.width * (canvas.width - 1));
+      const pixelY = Math.floor((y + dimensions.height/2) / dimensions.height * (canvas.height - 1));
       const pixelIndex = (pixelY * canvas.width + pixelX) * 4;
 
       let height = (pixels[pixelIndex] + pixels[pixelIndex + 1] + pixels[pixelIndex + 2]) / (3 * 255) * baseHeight;
@@ -302,172 +284,59 @@ const HeightMap = React.forwardRef<HeightMapRef, {
       }
       
       positions[idx + 2] = height;
-
-      // Classifica os vértices das bordas usando comparação exata
-      if (x === minX) leftEdge.push(i);
-      if (x === maxX) rightEdge.push(i);
-      if (y === minY) bottomEdge.push(i);
-      if (y === maxY) topEdge.push(i);
     }
 
-    // Ordena as bordas por coordenada para garantir continuidade
-    leftEdge.sort((a, b) => positions[a * 3 + 1] - positions[b * 3 + 1]);
-    rightEdge.sort((a, b) => positions[a * 3 + 1] - positions[b * 3 + 1]);
-    topEdge.sort((a, b) => positions[a * 3] - positions[b * 3]);
-    bottomEdge.sort((a, b) => positions[a * 3] - positions[b * 3]);
-
-    // Cria novos vértices e faces
-    const newPositions: number[] = [];
-    const newIndices: number[] = [];
-    const existingIndices = Array.from(geometry.index?.array || []);
-
-    // Copia os vértices originais
-    for (let i = 0; i < positions.length; i++) {
-      newPositions.push(positions[i]);
-    }
-    const originalVertexCount = positions.length / 3;
-
-    // Função auxiliar para criar faces da parede
-    const createWallFaces = (edge: number[]) => {
-      const wallVertices: number[] = [];
-      
-      // Cria vértices extrudados para cada vértice da borda
-      edge.forEach(vertexIndex => {
-        const baseIndex = vertexIndex * 3;
-        newPositions.push(
-          positions[baseIndex],
-          positions[baseIndex + 1],
-          -baseThicknessValue
-        );
-        wallVertices.push(newPositions.length / 3 - 1);
-      });
-
-      // Cria faces entre vértices adjacentes
-      for (let i = 0; i < edge.length - 1; i++) {
-        const topLeft = edge[i];
-        const topRight = edge[i + 1];
-        const bottomLeft = wallVertices[i];
-        const bottomRight = wallVertices[i + 1];
-
-        // Primeira face do quad
-        newIndices.push(
-          topLeft,
-          topRight,
-          bottomLeft
-        );
-
-        // Segunda face do quad
-        newIndices.push(
-          topRight,
-          bottomRight,
-          bottomLeft
-        );
-      }
-    };
-
-    // Cria as paredes para cada borda
-    createWallFaces(leftEdge);
-    createWallFaces(rightEdge);
-    createWallFaces(topEdge);
-    createWallFaces(bottomEdge);
-
-    // Cria a base (bottom face)
-    // Primeiro, adiciona o vértice central
-    const centerX = 0;
-    const centerY = 0;
-    const centerZ = -baseThicknessValue;
-    newPositions.push(centerX, centerY, centerZ);
-    const centerIndex = newPositions.length / 3 - 1;
-
-    // Coleta todos os vértices inferiores das paredes em ordem horária
-    const bottomVertices: number[] = [];
-    
-    // Função auxiliar para adicionar vértices sem duplicatas
-    const addUniqueVertex = (x: number, y: number) => {
-      const vertexIndex = newPositions.length / 3;
-      newPositions.push(x, y, -baseThicknessValue);
-      bottomVertices.push(vertexIndex);
-    };
-
-    // Adiciona os vértices em ordem horária
-    // Começa com a borda inferior (da esquerda para a direita)
-    bottomEdge.forEach(idx => {
-      addUniqueVertex(positions[idx * 3], positions[idx * 3 + 1]);
-    });
-
-    // Borda direita (de baixo para cima)
-    rightEdge.forEach(idx => {
-      addUniqueVertex(positions[idx * 3], positions[idx * 3 + 1]);
-    });
-
-    // Borda superior (da direita para a esquerda)
-    topEdge.reverse().forEach(idx => {
-      addUniqueVertex(positions[idx * 3], positions[idx * 3 + 1]);
-    });
-
-    // Borda esquerda (de cima para baixo)
-    leftEdge.reverse().forEach(idx => {
-      addUniqueVertex(positions[idx * 3], positions[idx * 3 + 1]);
-    });
-
-    // Remove vértices duplicados nas junções das bordas
-    const uniqueBottomVertices = bottomVertices.filter((vertex, index, self) => {
-      if (index === 0) return true;
-      const prevX = newPositions[self[index - 1] * 3];
-      const prevY = newPositions[self[index - 1] * 3 + 1];
-      const currX = newPositions[vertex * 3];
-      const currY = newPositions[vertex * 3 + 1];
-      return Math.abs(prevX - currX) > 0.001 || Math.abs(prevY - currY) > 0.001;
-    });
-
-    // Cria os triângulos da base conectando ao centro
-    for (let i = 0; i < uniqueBottomVertices.length; i++) {
-      const current = uniqueBottomVertices[i];
-      const next = uniqueBottomVertices[(i + 1) % uniqueBottomVertices.length];
-      
-      // Cria triângulo no sentido anti-horário para a face ficar para cima
-      newIndices.push(
-        centerIndex,
-        next,
-        current
-      );
-    }
-
-    // Atualiza a geometria com os novos vértices e faces
-    const finalGeometry = new THREE.BufferGeometry();
-    finalGeometry.setAttribute('position', new THREE.Float32BufferAttribute(newPositions, 3));
-    finalGeometry.setIndex([...existingIndices, ...newIndices]);
-    finalGeometry.computeVertexNormals();
-
-    return finalGeometry;
+    // Atualiza a geometria
+    geometry.computeVertexNormals();
+    return geometry;
   };
 
-  const exportToSTL = () => {
+  const exportToSTLHandler = () => {
     const exportGeometry = createGeometryWithHeight();
     if (!exportGeometry) return;
+    exportToSTL(exportGeometry, baseThickness);
+  };
 
-    const exportMesh = new THREE.Mesh(
-      exportGeometry,
-      new THREE.MeshStandardMaterial({ side: THREE.DoubleSide })
-    );
-    exportMesh.rotation.x = -Math.PI / 2;
+  const exportToGeneric3MFHandler = async () => {
+    const exportGeometry = createGeometryWithHeight();
+    if (!exportGeometry) return;
+    await exportToGeneric3MF(exportGeometry, layers, layerHeight, layerHeight * 2, baseThickness);
+  };
 
-    const tempScene = new THREE.Scene();
-    tempScene.add(exportMesh);
-
-    const exporter = new STLExporter();
-    const stlString = exporter.parse(tempScene);
-    const blob = new Blob([stlString], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = 'modelo_3d.stl';
-    link.click();
-    URL.revokeObjectURL(url);
+  const exportToPrusaHandler = async () => {
+    const exportGeometry = createGeometryWithHeight();
+    if (!exportGeometry) return;
+    
+    // Salva a posição original da câmera e cor de fundo
+    const originalPosition = camera.position.clone();
+    const originalRotation = camera.rotation.clone();
+    const originalBackground = scene.background;
+    
+    // Configura a cena para o thumbnail
+    // scene.background = new THREE.Color(0xeeeeee); // Cinza claro
+    camera.position.set(0, 240, 180);
+    camera.lookAt(0, 0, 0);
+    
+    // Força uma renderização e espera o próximo frame
+    gl.render(scene, camera);
+    await new Promise(resolve => requestAnimationFrame(resolve));
+    
+    // Captura a imagem
+    const imageData = gl.domElement.toDataURL('image/png');
+    
+    // Restaura as configurações originais
+    camera.position.copy(originalPosition);
+    camera.rotation.copy(originalRotation);
+    scene.background = originalBackground;
+    gl.render(scene, camera);
+    
+    await exportToPrusa3MF(exportGeometry, layers, layerHeight, layerHeight * 2, baseThickness, imageData);
   };
 
   React.useImperativeHandle(ref, () => ({
-    exportToSTL
+    exportToSTL: exportToSTLHandler,
+    exportToGeneric3MF: exportToGeneric3MFHandler,
+    exportToPrusa3MF: exportToPrusaHandler
   }));
 
   return (
@@ -483,6 +352,7 @@ const ThreeViewer: React.FC<ThreeViewerProps> = ({ imageUrl, baseHeight, baseThi
   const [showTDMode, setShowTDMode] = React.useState(true);
   const [showExportInfo, setShowExportInfo] = React.useState(false);
   const heightMapRef = useRef<HeightMapRef>(null);
+  const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
 
   useEffect(() => {
     if (imageUrl) {
@@ -501,10 +371,22 @@ const ThreeViewer: React.FC<ThreeViewerProps> = ({ imageUrl, baseHeight, baseThi
     }
   }, [imageUrl]);
 
-  const handleExport = () => {
+  const handleExportSTL = () => {
     if (heightMapRef.current) {
       heightMapRef.current.exportToSTL();
       setShowExportInfo(true);
+    }
+  };
+
+  const handleExportGeneric3MF = () => {
+    if (heightMapRef.current) {
+      heightMapRef.current.exportToGeneric3MF();
+    }
+  };
+
+  const handleExportPrusa = () => {
+    if (heightMapRef.current) {
+      heightMapRef.current.exportToPrusa3MF();
     }
   };
 
@@ -534,9 +416,11 @@ const ThreeViewer: React.FC<ThreeViewerProps> = ({ imageUrl, baseHeight, baseThi
           Slicing Info
         </button>
         {texture && (
-          <button className="export-button" onClick={handleExport}>
-            Export STL
-          </button>
+          <ExportDropdown
+            onExportSTL={handleExportSTL}
+            onExportGeneric3MF={handleExportGeneric3MF}
+            onExportPrusa3MF={handleExportPrusa}
+          />
         )}
       </div>
       <div style={{ width: '100%', height: '500px' }}>
@@ -573,4 +457,4 @@ const ThreeViewer: React.FC<ThreeViewerProps> = ({ imageUrl, baseHeight, baseThi
   );
 };
 
-export default ThreeViewer; 
+export default ThreeViewer;
