@@ -26,6 +26,7 @@ interface HeightMapRef {
   exportToSTL: () => void;
   exportToGeneric3MF: () => void;
   exportToPrusa3MF: () => void;
+  exportToBambu3MF: () => void;
 }
 
 const HeightMap = React.forwardRef<HeightMapRef, {
@@ -291,6 +292,32 @@ const HeightMap = React.forwardRef<HeightMapRef, {
     return geometry;
   };
 
+  const captureModelThumbnail = async () => {
+    // Salva a posição original da câmera e cor de fundo
+    const originalPosition = camera.position.clone();
+    const originalRotation = camera.rotation.clone();
+    const originalBackground = scene.background;
+    
+    // Configura a cena para o thumbnail
+    camera.position.set(0, 240, 180);
+    camera.lookAt(0, 0, 0);
+    
+    // Força uma renderização e espera o próximo frame
+    gl.render(scene, camera);
+    await new Promise(resolve => requestAnimationFrame(resolve));
+    
+    // Captura a imagem
+    const imageData = gl.domElement.toDataURL('image/png');
+    
+    // Restaura as configurações originais
+    camera.position.copy(originalPosition);
+    camera.rotation.copy(originalRotation);
+    scene.background = originalBackground;
+    gl.render(scene, camera);
+
+    return imageData;
+  };
+
   const exportToSTLHandler = () => {
     const exportGeometry = createGeometryWithHeight();
     if (!exportGeometry) return;
@@ -307,36 +334,23 @@ const HeightMap = React.forwardRef<HeightMapRef, {
     const exportGeometry = createGeometryWithHeight();
     if (!exportGeometry) return;
     
-    // Salva a posição original da câmera e cor de fundo
-    const originalPosition = camera.position.clone();
-    const originalRotation = camera.rotation.clone();
-    const originalBackground = scene.background;
-    
-    // Configura a cena para o thumbnail
-    // scene.background = new THREE.Color(0xeeeeee); // Cinza claro
-    camera.position.set(0, 240, 180);
-    camera.lookAt(0, 0, 0);
-    
-    // Força uma renderização e espera o próximo frame
-    gl.render(scene, camera);
-    await new Promise(resolve => requestAnimationFrame(resolve));
-    
-    // Captura a imagem
-    const imageData = gl.domElement.toDataURL('image/png');
-    
-    // Restaura as configurações originais
-    camera.position.copy(originalPosition);
-    camera.rotation.copy(originalRotation);
-    scene.background = originalBackground;
-    gl.render(scene, camera);
-    
+    const imageData = await captureModelThumbnail();
     await exportToPrusa3MF(exportGeometry, layers, layerHeight, layerHeight * 2, baseThickness, imageData);
+  };
+
+  const exportToBambuHandler = async () => {
+    const exportGeometry = createGeometryWithHeight();
+    if (!exportGeometry) return;
+    
+    const imageData = await captureModelThumbnail();
+    await exportToBambu3MF(exportGeometry, layers, layerHeight, layerHeight * 2, baseThickness, imageData);
   };
 
   React.useImperativeHandle(ref, () => ({
     exportToSTL: exportToSTLHandler,
     exportToGeneric3MF: exportToGeneric3MFHandler,
-    exportToPrusa3MF: exportToPrusaHandler
+    exportToPrusa3MF: exportToPrusaHandler,
+    exportToBambu3MF: exportToBambuHandler
   }));
 
   return (
@@ -390,6 +404,12 @@ const ThreeViewer: React.FC<ThreeViewerProps> = ({ imageUrl, baseHeight, baseThi
     }
   };
 
+  const handleExportBambu = () => {
+    if (heightMapRef.current) {
+      heightMapRef.current.exportToBambu3MF();
+    }
+  };
+
   if (!imageUrl) {
     return null;
   }
@@ -420,6 +440,7 @@ const ThreeViewer: React.FC<ThreeViewerProps> = ({ imageUrl, baseHeight, baseThi
             onExportSTL={handleExportSTL}
             onExportGeneric3MF={handleExportGeneric3MF}
             onExportPrusa3MF={handleExportPrusa}
+            onExportBambu3MF={handleExportBambu}
           />
         )}
       </div>

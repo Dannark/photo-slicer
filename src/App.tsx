@@ -7,7 +7,7 @@ import LayerColorSlider from './components/LayerColorSlider';
 import Version from './components/Version';
 
 const DEFAULT_LAYER_HEIGHT = 0.08; // mm por camada
-const DEFAULT_BASE_LAYERS = 0; // Começa sem camadas base
+const DEFAULT_BASE_LAYERS = 2; // Começa com 2 camadas base
 const DEFAULT_RESOLUTION = 400; // Resolução padrão da malha
 
 function App() {

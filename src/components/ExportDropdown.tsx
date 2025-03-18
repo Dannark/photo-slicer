@@ -5,9 +5,15 @@ interface ExportDropdownProps {
   onExportSTL: () => void;
   onExportGeneric3MF: () => void;
   onExportPrusa3MF: () => void;
+  onExportBambu3MF: () => void;
 }
 
-const ExportDropdown: React.FC<ExportDropdownProps> = ({ onExportSTL, onExportGeneric3MF, onExportPrusa3MF }) => {
+const ExportDropdown: React.FC<ExportDropdownProps> = ({ 
+  onExportSTL, 
+  onExportGeneric3MF, 
+  onExportPrusa3MF,
+  onExportBambu3MF 
+}) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -42,13 +48,19 @@ const ExportDropdown: React.FC<ExportDropdownProps> = ({ onExportSTL, onExportGe
             onExportGeneric3MF();
             setIsOpen(false);
           }}>
-            Export 3MF
+            Export 3MF (Generic)
           </button>
           <button onClick={() => {
             onExportPrusa3MF();
             setIsOpen(false);
           }}>
             Export 3MF (PrusaSlicer)
+          </button>
+          <button onClick={() => {
+            onExportBambu3MF();
+            setIsOpen(false);
+          }}>
+            Export 3MF (Bambu Studio)
           </button>
         </div>
       )}

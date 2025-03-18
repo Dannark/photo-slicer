@@ -25,7 +25,6 @@ const generateThumbnailFromImage = async (imageData: string): Promise<string> =>
       const height = img.height;
       const x = (canvas.width - width) / 2;
       const y = (canvas.height - height) / 2;
-      console.log({x, y, width, height, scale});
 
       // Desenha a imagem centralizada
       ctx.drawImage(img, x, y, width, height);
