@@ -1,6 +1,6 @@
 # Photo Slicer
 
-A web tool for creating multi-colored 3D models from images for 3D printing.
+A web tool for creating multi-colored 3D models from images for 3D printing. Try it out now at [photo-slicer.vercel.app](https://photo-slicer.vercel.app)!
 
 ## Features
 
