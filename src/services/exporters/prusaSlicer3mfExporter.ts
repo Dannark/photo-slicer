@@ -185,23 +185,18 @@ export const exportToPrusa3MF = async (
 
   // Calcula as alturas de troca de cor e gera o XML
   const colorChanges = layers.slice(1).map((layer, index) => {
-    // Calcula em qual camada ocorre a troca baseado na porcentagem
-    const heightPercentage = layer.heightPercentage / 100;
-    const targetLayer = Math.round(heightPercentage * totalLayers);
+    // Calcula o número de camadas base e normais
+    const baseLayers = Math.floor(baseThickness / layerHeight);
+    const normalLayers = totalLayers - baseLayers;
+
+    // Usa a mesma lógica do ExportInfo.tsx
+    const previousEnd = Math.floor((layers[index].heightPercentage / 100) * normalLayers);
+    const baseStart = previousEnd + 1;
+    const start = baseStart + baseLayers;
     
     // Calcula a altura real em mm onde ocorre a troca
-    // Primeira camada tem altura diferente
-    const height = firstLayerHeight + (layerHeight * (targetLayer - 1));
+    const height = firstLayerHeight + (layerHeight * (start - 1));
     const print_z = height.toFixed(8);
-
-    console.log('Calculando altura da camada:', {
-      heightPercentage,
-      totalLayers,
-      targetLayer,
-      height,
-      print_z,
-      layer
-    });
     
     return `  <code print_z="${print_z}" type="0" extruder="1" color="${layer.color}" extra="" gcode="M600"/>`;
   });
