@@ -95,20 +95,20 @@ export const exportToBambu3MF = async (
 
   // Gera o arquivo plate_1.config com as configurações da placa de impressão
   const plateConfig = {
-    bbox_all: [0, 0, 0, modelWidth, modelDepth, modelHeight],
+    bbox_all: ["0", "0", "0", modelWidth.toString(), modelDepth.toString(), modelHeight.toString()],
     bbox_objects: [{
-      area: modelWidth * modelDepth,
-      bbox: [0, 0, 0, modelWidth, modelDepth, modelHeight],
-      layer_height: layerHeight,
+      area: (modelWidth * modelDepth).toString(),
+      bbox: ["0", "0", "0", modelWidth.toString(), modelDepth.toString(), modelHeight.toString()],
+      layer_height: layerHeight.toString(),
       name: "modelo_3d"
     }],
     bed_type: "Bambu Cool Plate",
     filament_colors: layers.map(layer => layer.color),
     filament_ids: ["GFB00"],
-    first_extruder: 1,
-    is_seq_print: false,
+    first_extruder: "1",
+    is_seq_print: "0",
     nozzle_diameter: defaultBambuA1Config.nozzle_diameter,
-    version: 1
+    version: "1"
   };
 
   zip.file('Metadata/plate_1.config', JSON.stringify(plateConfig));
@@ -164,8 +164,8 @@ ${generateTrianglesXML(extrudedGeometry)}
   // Gera o arquivo project_settings.config com todas as configurações
   const projectSettingsConfig = {
     ...defaultBambuA1Config,
-    layer_height: layerHeight,
-    initial_layer_print_height: firstLayerHeight,
+    layer_height: layerHeight.toString(),
+    initial_layer_print_height: firstLayerHeight.toString(),
     filament_colour: layers.map(layer => layer.color)
   };
 
@@ -174,7 +174,7 @@ ${generateTrianglesXML(extrudedGeometry)}
   // Gera o arquivo filament_settings_1.config com as configurações do filamento
   const filamentSettingsConfig = {
     ...defaultFilamentSettings,
-    filament_settings_id: layers.map(() => "(modelo_3d.3mf)"),
+    filament_settings_id: layers.map(() => "(Photo Slicer)"),
     filament_type: layers.map(() => "PLA"),
     filament_colour: layers.map(layer => layer.color)
   };
@@ -246,26 +246,24 @@ ${generateTrianglesXML(extrudedGeometry)}
   zip.file('Metadata/cut_information.xml', cutInformationXML);
 
   // Calcula as alturas de troca de cor e gera o XML
-  const colorChanges = layers.slice(1).map((layer, index) => {
-    // Calcula em qual camada ocorre a troca baseado na porcentagem
-    const heightPercentage = layer.heightPercentage / 100;
-    const targetLayer = Math.round(heightPercentage * totalLayers);
-    
-    // Calcula a altura real em mm onde ocorre a troca
-    const height = firstLayerHeight + (layerHeight * (targetLayer - 1));
-    const top_z = height.toFixed(8);
+  const colorChanges = layers.map((layer, index) => {
+    if (index === 0) return null; // A primeira cor é a base, não precisa de troca
 
-    console.log('Calculando altura da camada:', {
-      heightPercentage,
-      totalLayers,
-      targetLayer,
-      height,
-      top_z,
-      layer
-    });
+    // Calcula o número total de camadas usando a mesma lógica do LayerColorSlider
+    const baseLayers = Math.floor(baseThickness / layerHeight);
+    const normalLayers = totalLayers - baseLayers
+
+    // Usa a mesma lógica do ExportInfo.tsx
+    const previousEnd = Math.floor((layers[index - 1].heightPercentage / 100) * normalLayers);
+    const baseStart = previousEnd + 1;
+    const start = baseStart + baseLayers;
+
+    // Calcula a altura real em mm onde ocorre a troca
+    const height = firstLayerHeight + (layerHeight * (start - 1));
     
-    return `<layer top_z="${top_z}" type="2" extruder="${index + 1}" color="${layer.color}" extra="" gcode="tool_change"/>`;
-  });
+    // O extruder começa em 2 pois 1 é a cor base
+    return `<layer top_z="${height.toFixed(8)}" type="2" extruder="${index + 1}" color="${layer.color}" extra="" gcode="tool_change"/>`;
+  }).filter(Boolean);
 
   // Gera o arquivo custom_gcode_per_layer.xml
   const customGcodeXML = `<?xml version="1.0" encoding="utf-8"?>

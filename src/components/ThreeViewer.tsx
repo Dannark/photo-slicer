@@ -469,7 +469,7 @@ const ThreeViewer: React.FC<ThreeViewerProps> = ({ imageUrl, baseHeight, baseThi
           firstLayerHeight={layerHeight * 2}
           layerHeight={layerHeight}
           layers={layers}
-          numLayers={Math.floor(baseHeight / layerHeight)}
+          numLayers={Math.ceil((baseHeight - (layerHeight * 2)) / layerHeight) + 1}
           baseThickness={baseThickness}
           onClose={() => setShowExportInfo(false)}
         />

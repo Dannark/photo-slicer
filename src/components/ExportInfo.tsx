@@ -22,17 +22,20 @@ const ExportInfo: React.FC<ExportInfoProps> = ({
   const getLayerRanges = () => {
     const ranges: { color: string; start: number; end: number }[] = [];
     
-    // Calcula o número total de camadas
-    const additionalBaseThickness = Math.max(0, baseThickness - firstLayerHeight);
-    const additionalBaseLayers = Math.floor(additionalBaseThickness / layerHeight);
-    const totalLayers = numLayers + additionalBaseLayers + 1; // +1 para a primeira camada
-
+    // Calcula o número de camadas base e normais
+    const baseLayers = Math.floor(baseThickness / layerHeight);
+    
     let previousEnd = 0;
     layers.forEach((layer, index) => {
-      // Calcula o número de camadas para esta cor
-      const layerEndNumber = Math.floor((layer.heightPercentage / 100) * totalLayers);
-      const start = previousEnd + 1;
-      const end = layerEndNumber;
+      // Calcula o início e fim sem considerar as camadas base primeiro
+      const baseStart = previousEnd + 1;
+      const calculatedEnd = Math.floor((layer.heightPercentage / 100) * numLayers);
+      
+      // Adiciona as camadas base ao início e fim
+      const start = baseStart + baseLayers;
+      const end = index === layers.length - 1 
+        ? numLayers + baseLayers // Adiciona as camadas base ao total de camadas
+        : calculatedEnd + baseLayers;
       
       ranges.push({
         color: layer.color,
@@ -40,7 +43,7 @@ const ExportInfo: React.FC<ExportInfoProps> = ({
         end: end
       });
       
-      previousEnd = end;
+      previousEnd = calculatedEnd;
     });
 
     return ranges;
