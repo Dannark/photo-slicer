@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { LayerConfig } from './HeightControls';
 import ColorPicker from './ColorPicker';
-import PatternSelector from './PatternSelector';
+import { PatternSelector } from './PatternSelector';
 import { TD_DIVISOR } from '../constants/config';
 
 interface LayerColorSliderProps {

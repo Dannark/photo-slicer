@@ -62,139 +62,161 @@ const HeightMap = React.forwardRef<HeightMapRef, {
   const dimensions = calculateDimensions(texture.image.width, texture.image.height);
 
   useEffect(() => {
-    if (meshRef.current) {
-      const initialColors = Array(5).fill(null).map(() => new THREE.Color(0x000000));
-      const initialHeights = Array(5).fill(1.0);
-      const initialTDs = Array(5).fill(0.0);
+    if (meshRef.current && THREE.Color) {
+      try {
+        const MAX_COLORS = 6;
+        // Cria arrays com valores padrão
+        const initialColors: THREE.Color[] = [];
+        const initialHeights: number[] = [];
+        const initialTDs: number[] = [];
 
-      layers.forEach((layer, index) => {
-        initialColors[index].set(layer.color);
-        initialHeights[index] = layer.heightPercentage / 100;
-        initialTDs[index] = layer.td;
-      });
+        // Preenche os arrays com valores padrão
+        for (let i = 0; i < MAX_COLORS; i++) {
+          initialColors.push(new THREE.Color(0x000000));
+          initialHeights.push(1.0);
+          initialTDs.push(0.0);
+        }
 
-      const material = new THREE.ShaderMaterial({
-        uniforms: {
-          heightMap: { value: texture },
-          baseHeight: { value: baseHeight },
-          layerColors: { value: initialColors },
-          layerHeights: { value: initialHeights },
-          layerTDs: { value: initialTDs },
-          isSteppedMode: { value: isSteppedMode },
-          showTDMode: { value: showTDMode },
-          layerHeight: { value: layerHeight },
-          numLayers: { value: layers.length },
-          baseThickness: { value: baseThickness },
-          firstLayerHeight: { value: layerHeight * 2 },
-          tdDivisor: { value: TD_DIVISOR }
-        },
-        vertexShader: `
-          uniform sampler2D heightMap;
-          uniform float baseHeight;
-          uniform float layerHeights[5];
-          uniform bool isSteppedMode;
-          uniform float layerHeight;
-          uniform float baseThickness;
-          uniform float firstLayerHeight;
-          varying float vLayerNumber;
-          
-          float getSteppedHeight(float height) {
-            float numLayers = floor(height / layerHeight);
-            return numLayers * layerHeight;
-          }
-          
-          void main() {
-            vec4 heightColor = texture2D(heightMap, uv);
-            float height = heightColor.r * baseHeight;
-            
-            if (isSteppedMode) {
-              height = getSteppedHeight(height);
-            }
-            
-            // Calcula o número da camada atual
-            float totalHeight = height + baseThickness;
-            float currentLayer = 1.0; // Começa na camada 1 (base)
-            
-            // Se passou da base
-            if (totalHeight > baseThickness) {
-              // Se está na primeira camada
-              if (totalHeight <= baseThickness + firstLayerHeight) {
-                currentLayer = 2.0; // Camada 2 (primeira camada colorida)
-              } else {
-                // Calcula qual camada está baseado na altura
-                float heightAboveFirst = totalHeight - (baseThickness + firstLayerHeight);
-                currentLayer = 3.0 + floor(heightAboveFirst / layerHeight);
+        // Atualiza com os valores das camadas
+        if (Array.isArray(layers)) {
+          layers.forEach((layer, index) => {
+            if (layer && typeof layer.color === 'string' && index < MAX_COLORS) {
+              try {
+                initialColors[index].set(layer.color);
+                initialHeights[index] = (layer.heightPercentage || 0) / 100;
+                initialTDs[index] = layer.td || 0;
+              } catch (error) {
+                console.error('Erro ao processar camada:', error);
               }
             }
-            
-            vLayerNumber = currentLayer;
-            
-            vec3 pos = position;
-            pos.z += height;
-            
-            gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
-          }
-        `,
-        fragmentShader: `
-          uniform vec3 layerColors[5];
-          uniform float layerHeights[5];
-          uniform float layerTDs[5];
-          uniform int numLayers;
-          uniform float baseThickness;
-          uniform float firstLayerHeight;
-          uniform float layerHeight;
-          uniform float baseHeight;
-          uniform bool isSteppedMode;
-          uniform bool showTDMode;
-          uniform float tdDivisor;
-          varying float vLayerNumber;
-          
-          vec3 interpolateColor(vec3 color1, vec3 color2, float factor) {
-            return mix(color1, color2, factor);
-          }
+          });
+        }
 
-          void main() {
-            vec3 color = layerColors[0];
+        const material = new THREE.ShaderMaterial({
+          uniforms: {
+            heightMap: { value: texture },
+            baseHeight: { value: baseHeight },
+            layerColors: { value: initialColors },
+            layerHeights: { value: initialHeights },
+            layerTDs: { value: initialTDs },
+            isSteppedMode: { value: isSteppedMode },
+            showTDMode: { value: showTDMode },
+            layerHeight: { value: layerHeight },
+            numLayers: { value: Array.isArray(layers) ? layers.length : 0 },
+            baseThickness: { value: baseThickness },
+            firstLayerHeight: { value: layerHeight * 2 },
+            tdDivisor: { value: TD_DIVISOR }
+          },
+          vertexShader: `
+            uniform sampler2D heightMap;
+            uniform float baseHeight;
+            uniform float layerHeights[6];
+            uniform bool isSteppedMode;
+            uniform float layerHeight;
+            uniform float baseThickness;
+            uniform float firstLayerHeight;
+            varying float vLayerNumber;
             
-            // Calcula o número total de camadas
-            float additionalBaseThickness = max(0.0, baseThickness - firstLayerHeight);
-            float additionalBaseLayers = floor(additionalBaseThickness / layerHeight);
-            float totalLayers = floor(baseHeight / layerHeight) + additionalBaseLayers + 1.0;
+            float getSteppedHeight(float height) {
+              float numLayers = floor(height / layerHeight);
+              return numLayers * layerHeight;
+            }
             
-            // Normaliza o número da camada para o intervalo 0-1
-            float normalizedLayer = (vLayerNumber - 1.0) / totalLayers;
-            
-            if (showTDMode) {
-              // Modo TD - Transição suave baseada no TD
-              vec3 previousColor = layerColors[0];
+            void main() {
+              vec4 heightColor = texture2D(heightMap, uv);
+              float height = heightColor.r * baseHeight;
               
-              for(int i = 1; i < 5; i++) {
-                if(i < numLayers && normalizedLayer >= layerHeights[i-1]) {
-                  // Dividimos o TD para obter a distância real de transição
-                  float td = layerTDs[i] / tdDivisor;
-                  float layersForTransition = td / layerHeight;
-                  float currentLayerInSection = (normalizedLayer - layerHeights[i-1]) * totalLayers;
-                  float progress = min(1.0, currentLayerInSection / layersForTransition);
-                  color = interpolateColor(previousColor, layerColors[i], progress);
-                  previousColor = layerColors[i];
+              if (isSteppedMode) {
+                height = getSteppedHeight(height);
+              }
+              
+              // Calcula o número da camada atual
+              float totalHeight = height + baseThickness;
+              float currentLayer = 1.0; // Começa na camada 1 (base)
+              
+              // Se passou da base
+              if (totalHeight > baseThickness) {
+                // Se está na primeira camada
+                if (totalHeight <= baseThickness + firstLayerHeight) {
+                  currentLayer = 2.0; // Camada 2 (primeira camada colorida)
+                } else {
+                  // Calcula qual camada está baseado na altura
+                  float heightAboveFirst = totalHeight - (baseThickness + firstLayerHeight);
+                  currentLayer = 3.0 + floor(heightAboveFirst / layerHeight);
                 }
               }
-            } else {
-              // Modo normal - Cores sólidas
-              for(int i = 1; i < 5; i++) {
-                if(i < numLayers && normalizedLayer >= layerHeights[i-1]) {
-                  color = layerColors[i];
-                }
-              }
+              
+              vLayerNumber = currentLayer;
+              
+              vec3 pos = position;
+              pos.z += height;
+              
+              gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
             }
+          `,
+          fragmentShader: `
+            uniform vec3 layerColors[6];
+            uniform float layerHeights[6];
+            uniform float layerTDs[6];
+            uniform int numLayers;
+            uniform float baseThickness;
+            uniform float firstLayerHeight;
+            uniform float layerHeight;
+            uniform float baseHeight;
+            uniform bool isSteppedMode;
+            uniform bool showTDMode;
+            uniform float tdDivisor;
+            varying float vLayerNumber;
             
-            gl_FragColor = vec4(color, 1.0);
-          }
-        `
-      });
+            vec3 interpolateColor(vec3 color1, vec3 color2, float factor) {
+              return mix(color1, color2, factor);
+            }
 
-      materialRef.current = material;
-      meshRef.current.material = material;
+            void main() {
+              vec3 color = layerColors[0];
+              
+              // Calcula o número total de camadas
+              float additionalBaseThickness = max(0.0, baseThickness - firstLayerHeight);
+              float additionalBaseLayers = floor(additionalBaseThickness / layerHeight);
+              float totalLayers = floor(baseHeight / layerHeight) + additionalBaseLayers + 1.0;
+              
+              // Normaliza o número da camada para o intervalo 0-1
+              float normalizedLayer = (vLayerNumber - 1.0) / totalLayers;
+              
+              if (showTDMode) {
+                // Modo TD - Transição suave baseada no TD
+                vec3 previousColor = layerColors[0];
+                
+                for(int i = 1; i < 6; i++) {
+                  if(i < numLayers && normalizedLayer >= layerHeights[i-1]) {
+                    // Dividimos o TD para obter a distância real de transição
+                    float td = layerTDs[i] / tdDivisor;
+                    float layersForTransition = td / layerHeight;
+                    float currentLayerInSection = (normalizedLayer - layerHeights[i-1]) * totalLayers;
+                    float progress = min(1.0, currentLayerInSection / layersForTransition);
+                    color = interpolateColor(previousColor, layerColors[i], progress);
+                    previousColor = layerColors[i];
+                  }
+                }
+              } else {
+                // Modo normal - Cores sólidas
+                for(int i = 1; i < 6; i++) {
+                  if(i < numLayers && normalizedLayer >= layerHeights[i-1]) {
+                    color = layerColors[i];
+                  }
+                }
+              }
+              
+              gl_FragColor = vec4(color, 1.0);
+            }
+          `
+        });
+
+        materialRef.current = material;
+        meshRef.current.material = material;
+      } catch (error) {
+        console.error('Erro ao criar material:', error);
+      }
     }
   }, [texture, baseHeight, baseThickness, layers, isSteppedMode, showTDMode, layerHeight]);
 
@@ -202,15 +224,29 @@ const HeightMap = React.forwardRef<HeightMapRef, {
   useEffect(() => {
     if (materialRef.current) {
       try {
-        const colors = Array(5).fill(null).map(() => new THREE.Color(0x000000));
-        const heights = Array(5).fill(1.0);
-        const tds = Array(5).fill(0.0);
+        const MAX_COLORS = 6;
+        const colors = Array(MAX_COLORS).fill(null).map(() => new THREE.Color(0x000000));
+        const heights = Array(MAX_COLORS).fill(1.0);
+        const tds = Array(MAX_COLORS).fill(0.0);
 
-        layers.forEach((layer, index) => {
-          colors[index].set(layer.color);
-          heights[index] = layer.heightPercentage / 100;
-          tds[index] = layer.td;
-        });
+        // Verifica se layers existe e é um array
+        if (Array.isArray(layers)) {
+          layers.forEach((layer, index) => {
+            if (layer && typeof layer.color === 'string' && index < MAX_COLORS) {
+              try {
+                colors[index].set(layer.color);
+                heights[index] = (layer.heightPercentage || 0) / 100;
+                tds[index] = layer.td || 0;
+              } catch (error) {
+                console.error('Erro ao atualizar uniforms da camada:', error);
+                // Em caso de erro, usa valores padrão
+                colors[index].set('#000000');
+                heights[index] = 0;
+                tds[index] = 0;
+              }
+            }
+          });
+        }
 
         materialRef.current.uniforms.heightMap.value = texture;
         materialRef.current.uniforms.baseHeight.value = baseHeight;
@@ -220,7 +256,7 @@ const HeightMap = React.forwardRef<HeightMapRef, {
         materialRef.current.uniforms.isSteppedMode.value = isSteppedMode;
         materialRef.current.uniforms.showTDMode.value = showTDMode;
         materialRef.current.uniforms.layerHeight.value = layerHeight;
-        materialRef.current.uniforms.numLayers.value = layers.length;
+        materialRef.current.uniforms.numLayers.value = Array.isArray(layers) ? layers.length : 0;
         materialRef.current.uniforms.baseThickness.value = baseThickness;
         materialRef.current.uniforms.firstLayerHeight.value = layerHeight * 2;
         materialRef.current.uniforms.tdDivisor.value = TD_DIVISOR;

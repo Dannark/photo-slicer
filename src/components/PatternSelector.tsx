@@ -1,145 +1,75 @@
-import React from 'react';
-import { LayerConfig } from './HeightControls';
+import React, { useState } from 'react';
+import { patterns } from '../patterns';
+import { LayerConfig } from '../patterns/types/types';
+import { DominantColorsPattern } from '../patterns/algorithms/dominantColors';
+import styles from './PatternSelector.module.css';
 
 interface PatternSelectorProps {
   onSelectPattern: (layers: LayerConfig[]) => void;
   imageData?: ImageData;
+  maxHeight?: number;
 }
 
-const PatternSelector: React.FC<PatternSelectorProps> = ({ onSelectPattern, imageData }) => {
-  const handlePatternChange = async (pattern: string) => {
-    let newPattern: LayerConfig[] = [];
+export const PatternSelector: React.FC<PatternSelectorProps> = ({ 
+  onSelectPattern,
+  imageData,
+  maxHeight = 100
+}) => {
+  const [selectedPatternIndex, setSelectedPatternIndex] = useState(0);
+  const [numColors, setNumColors] = useState(5);
 
-    if (pattern === 'grayscale-fixed') {
-      newPattern = [
-        { color: '#000000', heightPercentage: calculateNonLinearPercentage(0, 4), td: 0.6 },   // Preto
-        { color: '#666666', heightPercentage: calculateNonLinearPercentage(1, 4), td: 1.4 },  // Cinza escuro
-        { color: '#CCCCCC', heightPercentage: calculateNonLinearPercentage(2, 4), td: 2.8 },  // Cinza claro
-        { color: '#FFFFFF', heightPercentage: calculateNonLinearPercentage(3, 4), td: 5.0 }  // Branco
-      ];
-    } else if (pattern === 'grayscale-distributed') {
-      newPattern = [
-        { color: '#000000', heightPercentage: 25, td: 0.6 },
-        { color: '#404040', heightPercentage: 50, td: 1.4 },
-        { color: '#808080', heightPercentage: 75, td: 2.0 },
-        { color: '#ffffff', heightPercentage: 100, td: 5.0 }
-      ];
-    } else if (pattern === 'auto') {
-      if (imageData && imageData.data.length > 0) {
-        newPattern = posterizeImage(imageData);
-      } else {
-        newPattern = [
-          { color: '#000000', heightPercentage: calculateNonLinearPercentage(0, 5), td: 0.6 },
-          { color: '#404040', heightPercentage: calculateNonLinearPercentage(1, 5), td: 1.4 },
-          { color: '#808080', heightPercentage: calculateNonLinearPercentage(2, 5), td: 1.4 },
-          { color: '#C0C0C0', heightPercentage: calculateNonLinearPercentage(3, 5), td: 2.0 },
-          { color: '#FFFFFF', heightPercentage: calculateNonLinearPercentage(4, 5), td: 5.0 }
-        ];
+  const handlePatternChange = async (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const index = parseInt(event.target.value);
+    setSelectedPatternIndex(index);
+    
+    if (imageData) {
+      let pattern = patterns[index];
+      if (pattern instanceof DominantColorsPattern) {
+        pattern = new DominantColorsPattern(numColors);
       }
+      const layers = await pattern.execute(imageData, maxHeight);
+      onSelectPattern(layers);
     }
-
-    onSelectPattern(newPattern);
   };
 
-  const posterizeImage = (imageData: ImageData): LayerConfig[] => {
-    // Número de níveis desejados
-    const numLevels = 5;
+  const handleNumColorsChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const value = Math.min(Math.max(2, parseInt(event.target.value) || 2), 8);
+    setNumColors(value);
     
-    // Array para armazenar as cores e suas luminâncias
-    type PixelInfo = { r: number; g: number; b: number; luminance: number; count: number };
-    const levels: PixelInfo[] = Array(numLevels).fill(null).map(() => ({ r: 0, g: 0, b: 0, luminance: 0, count: 0 }));
-    
-    // Calcula a luminância de cada pixel e agrupa nos níveis
-    for (let i = 0; i < imageData.data.length; i += 4) {
-      const r = imageData.data[i];
-      const g = imageData.data[i + 1];
-      const b = imageData.data[i + 2];
-      
-      // Calcula a luminância
-      const luminance = 0.299 * r + 0.587 * g + 0.114 * b;
-      
-      // Determina o nível baseado na luminância
-      const levelIndex = Math.min(Math.floor((luminance / 255) * numLevels), numLevels - 1);
-      
-      // Acumula as cores para fazer a média depois
-      levels[levelIndex].r += r;
-      levels[levelIndex].g += g;
-      levels[levelIndex].b += b;
-      levels[levelIndex].luminance += luminance;
-      levels[levelIndex].count++;
+    if (imageData && selectedPatternIndex === 3) {
+      const pattern = new DominantColorsPattern(value);
+      const layers = await pattern.execute(imageData, maxHeight);
+      onSelectPattern(layers);
     }
-    
-    // Calcula a média das cores para cada nível
-    const pattern: LayerConfig[] = levels.map((level, index) => {
-      if (level.count === 0) {
-        // Se não houver pixels neste nível, use um valor interpolado
-        const gray = Math.round((index / (numLevels - 1)) * 255);
-        return {
-          color: `#${gray.toString(16).padStart(2, '0').repeat(3)}`,
-          heightPercentage: ((index + 1) * 100) / numLevels,
-          td: gray < 64 ? 0.6 : gray < 128 ? 1.4 : 2.0 // Define TD baseado no nível de cinza
-        };
-      }
-      
-      // Calcula a média das cores
-      const r = Math.round(level.r / level.count);
-      const g = Math.round(level.g / level.count);
-      const b = Math.round(level.b / level.count);
-      
-      // Calcula a luminância para determinar o TD
-      const luminance = 0.299 * r + 0.587 * g + 0.114 * b;
-      const td = luminance < 64 ? 0.6 : luminance < 128 ? 1.4 : 2.0;
-      
-      // Converte para hexadecimal
-      const color = `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
-      
-      return {
-        color,
-        heightPercentage: ((index + 1) * 100) / numLevels,
-        td
-      };
-    });
-    
-    // Ordena o padrão pela luminância (do mais escuro para o mais claro)
-    pattern.sort((a, b) => {
-      const getLuminance = (hex: string) => {
-        const r = parseInt(hex.slice(1, 3), 16);
-        const g = parseInt(hex.slice(3, 5), 16);
-        const b = parseInt(hex.slice(5, 7), 16);
-        return 0.299 * r + 0.587 * g + 0.114 * b;
-      };
-      
-      return getLuminance(a.color) - getLuminance(b.color);
-    });
-    
-    // Ajusta as porcentagens após a ordenação
-    pattern.forEach((layer, index) => {
-      layer.heightPercentage = calculateNonLinearPercentage(index, numLevels);
-    });
-
-    return pattern;
-  };
-
-  // Função para calcular a distribuição não-linear das porcentagens
-  const calculateNonLinearPercentage = (index: number, total: number): number => {
-    // Usando uma curva exponencial para distribuir os valores
-    // Expoente maior que 1 faz a curva crescer mais devagar no início e mais rápido no final
-    const normalizedValue = Math.pow((index + 1) / total, 2);
-    return Math.min(Math.round(normalizedValue * 100), 100);
   };
 
   return (
-    <div className="pattern-selector">
+    <div className={styles.container}>
       <select 
-        onChange={(e) => handlePatternChange(e.target.value)}
-        className="pattern-select"
+        onChange={handlePatternChange} 
+        defaultValue="0"
+        className={styles.patternSelect}
       >
-        <option value="grayscale-fixed">Grayscale (Default)</option>
-        <option value="grayscale-distributed">Grayscale (Distributed)</option>
-        <option value="auto">Posterized</option>
+        <option value="0">Grayscale (Default)</option>
+        <option value="1">Grayscale (Distributed)</option>
+        <option value="2">Posterized</option>
+        <option value="3">Dominant Colors</option>
       </select>
+
+      {selectedPatternIndex === 3 && (
+        <div className={styles.colorsControl}>
+          <label htmlFor="numColors" className={styles.label}>Number of Colors:</label>
+          <input
+            type="number"
+            id="numColors"
+            min="2"
+            max="8"
+            value={numColors}
+            onChange={handleNumColorsChange}
+            className={styles.numberInput}
+          />
+        </div>
+      )}
     </div>
   );
-};
-
-export default PatternSelector; 
+}; 

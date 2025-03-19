@@ -369,38 +369,6 @@
   background-color: #aa2222;
 }
 
-.pattern-selector {
-  margin-bottom: 15px;
-}
-
-.pattern-select {
-  width: 100%;
-  padding: 8px 12px;
-  border-radius: 4px;
-  border: 1px solid #3a3e43;
-  background-color: #1a1e23;
-  color: white;
-  font-size: 14px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.pattern-select:hover {
-  border-color: #61dafb;
-}
-
-.pattern-select:focus {
-  outline: none;
-  border-color: #61dafb;
-  box-shadow: 0 0 0 2px rgba(97, 218, 251, 0.2);
-}
-
-.pattern-select option {
-  background-color: #1a1e23;
-  color: white;
-  padding: 8px;
-}
-
 .image-uploader {
   display: flex;
   align-items: center;
