@@ -15,3 +15,13 @@ export interface Pattern {
   name: string;
   execute: (imageData: ImageData, maxHeight?: number) => Promise<LayerConfig[]>;
 }
+
+export enum HeightMode {
+  LUMINANCE = 'luminance',
+  COLOR_MAPPING = 'color-mapping'
+}
+
+export interface HeightModeConfig {
+  mode: HeightMode;
+  layers?: LayerConfig[];
+}

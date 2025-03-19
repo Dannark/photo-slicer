@@ -5,6 +5,8 @@ import ThreeViewer from './components/ThreeViewer';
 import HeightControls, { LayerConfig } from './components/HeightControls';
 import LayerColorSlider from './components/LayerColorSlider';
 import Version from './components/Version';
+import { HeightMode, HeightModeConfig } from './patterns/types/types';
+import { HeightModeSelector } from './components/HeightModeSelector';
 
 const DEFAULT_LAYER_HEIGHT = 0.08; // mm por camada
 const DEFAULT_BASE_LAYERS = 2; // Começa com 2 camadas base
@@ -16,6 +18,7 @@ function App() {
   const [layerHeight, setLayerHeight] = useState(DEFAULT_LAYER_HEIGHT);
   const [baseThickness, setBaseThickness] = useState(DEFAULT_BASE_LAYERS * DEFAULT_LAYER_HEIGHT);
   const [resolution, setResolution] = useState(DEFAULT_RESOLUTION);
+  const [heightMode, setHeightMode] = useState<HeightMode>(HeightMode.LUMINANCE);
   const [layers, setLayers] = useState<LayerConfig[]>([
     { color: '#000000', heightPercentage: 10, td: 0.6 },   // Preto
     { color: '#666666', heightPercentage: 33, td: 1.4 },  // Cinza escuro
@@ -52,6 +55,10 @@ function App() {
     setLayers(newLayers);
   };
 
+  const handleHeightModeChange = (config: HeightModeConfig) => {
+    setHeightMode(config.mode);
+  };
+
   return (
     <div className="App">
       <div className="container">
@@ -85,6 +92,10 @@ function App() {
                 resolution={resolution}
                 onResolutionChange={setResolution}
               />
+              <HeightModeSelector
+                currentMode={heightMode}
+                onModeChange={handleHeightModeChange}
+              />
               <LayerColorSlider
                 layers={layers}
                 onChange={handleLayersChange}
@@ -103,6 +114,7 @@ function App() {
                 layers={layers}
                 resolution={resolution}
                 layerHeight={layerHeight}
+                heightMode={heightMode}
               />
             </main>
           </>
