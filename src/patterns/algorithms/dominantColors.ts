@@ -16,11 +16,34 @@ export class DominantColorsPattern implements Pattern {
   name = 'dominant-colors';
   private DEFAULT_COLORS = 5;
   private MAX_COLORS = 15;
-  private QUANTIZE_LEVELS = 64;
-  private SIMILARITY_THRESHOLD = 0.15; // Limiar para considerar cores similares
+  private QUANTIZE_LEVELS: number;
+  private SIMILARITY_THRESHOLD: number;
+  private RGB_WEIGHT: number;
+  private HSL_WEIGHT: number;
+  private HUE_WEIGHT: number;
+  private SATURATION_WEIGHT: number;
+  private LIGHTNESS_WEIGHT: number;
 
-  constructor(private maxColors: number = 5) {
+  constructor(
+    private maxColors: number = 5,
+    options: {
+      similarityThreshold?: number;
+      quantizeLevels?: number;
+      rgbWeight?: number;
+      hslWeight?: number;
+      hueWeight?: number;
+      saturationWeight?: number;
+      lightnessWeight?: number;
+    } = {}
+  ) {
     this.maxColors = Math.min(Math.max(2, maxColors), this.MAX_COLORS);
+    this.SIMILARITY_THRESHOLD = options.similarityThreshold ?? 0.15;
+    this.QUANTIZE_LEVELS = options.quantizeLevels ?? 64;
+    this.RGB_WEIGHT = options.rgbWeight ?? 0.3;
+    this.HSL_WEIGHT = options.hslWeight ?? 0.7;
+    this.HUE_WEIGHT = options.hueWeight ?? 15;
+    this.SATURATION_WEIGHT = options.saturationWeight ?? 5;
+    this.LIGHTNESS_WEIGHT = options.lightnessWeight ?? 4;
   }
 
   private rgbToHex(r: number, g: number, b: number): string {
@@ -48,13 +71,13 @@ export class DominantColorsPattern implements Pattern {
   }
 
   private colorDistance(color1: PixelInfo, color2: PixelInfo): number {
-    // Calcula distância no espaço RGB (30% do peso)
+    // Calcula distância no espaço RGB
     const rDiff = (color1.r - color2.r) / 255;
     const gDiff = (color1.g - color2.g) / 255;
     const bDiff = (color1.b - color2.b) / 255;
     const rgbDistance = Math.sqrt(rDiff * rDiff + gDiff * gDiff + bDiff * bDiff);
 
-    // Calcula distância no espaço HSL (70% do peso)
+    // Calcula distância no espaço HSL
     const hueDiff = Math.min(Math.abs(color1.hue - color2.hue), 1 - Math.abs(color1.hue - color2.hue));
     const satDiff = Math.abs(color1.saturation - color2.saturation);
     const lightDiff = Math.abs(color1.lightness - color2.lightness);
@@ -62,12 +85,12 @@ export class DominantColorsPattern implements Pattern {
     // Aumenta significativamente o peso para diferenças de matiz
     const saturationWeight = Math.max(color1.saturation, color2.saturation);
     const hslDistance = Math.sqrt(
-      (hueDiff * hueDiff * 15 * saturationWeight) + // Aumentado ainda mais
-      (satDiff * satDiff * 5) + // Aumentado
-      (lightDiff * lightDiff * 4) // Aumentado
+      (hueDiff * hueDiff * this.HUE_WEIGHT * saturationWeight) +
+      (satDiff * satDiff * this.SATURATION_WEIGHT) +
+      (lightDiff * lightDiff * this.LIGHTNESS_WEIGHT)
     );
 
-    return rgbDistance * 0.3 + hslDistance * 0.7;
+    return rgbDistance * this.RGB_WEIGHT + hslDistance * this.HSL_WEIGHT;
   }
 
   private getColorImportance(pixel: PixelInfo): number {
