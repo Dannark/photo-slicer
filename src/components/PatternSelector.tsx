@@ -33,7 +33,7 @@ export const PatternSelector: React.FC<PatternSelectorProps> = ({
   };
 
   const handleNumColorsChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const value = Math.min(Math.max(2, parseInt(event.target.value) || 2), 8);
+    const value = Math.min(Math.max(2, parseInt(event.target.value) || 2), 15);
     setNumColors(value);
     
     if (imageData && selectedPatternIndex === 3) {
@@ -63,7 +63,7 @@ export const PatternSelector: React.FC<PatternSelectorProps> = ({
             type="number"
             id="numColors"
             min="2"
-            max="8"
+            max="15"
             value={numColors}
             onChange={handleNumColorsChange}
             className={styles.numberInput}

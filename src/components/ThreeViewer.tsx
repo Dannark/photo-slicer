@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { Canvas, useThree } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import * as THREE from 'three';
@@ -7,7 +7,7 @@ import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils';
 import { LayerConfig } from './HeightControls';
 import ExportInfo from './ExportInfo';
 import ExportDropdown from './ExportDropdown';
-import { TD_DIVISOR } from '../constants/config';
+import { TD_MULTIPLIER } from '../constants/config';
 import { exportToSTL, exportToBambu3MF, exportToGeneric3MF, exportToPrusa3MF } from '../services/exportService';
 import { HeightMode } from '../patterns/types/types';
 import { calculateColorBasedHeight } from '../utils/colorHeightMapping';
@@ -68,7 +68,7 @@ const HeightMap = React.forwardRef<HeightMapRef, {
   useEffect(() => {
     if (meshRef.current && THREE.Color) {
       try {
-        const MAX_COLORS = 6;
+        const MAX_COLORS = 15;
         const initialColors: THREE.Color[] = [];
         const initialHeights: number[] = [];
         const initialTDs: number[] = [];
@@ -106,14 +106,14 @@ const HeightMap = React.forwardRef<HeightMapRef, {
             numLayers: { value: Array.isArray(layers) ? layers.length : 0 },
             baseThickness: { value: baseThickness },
             firstLayerHeight: { value: layerHeight * 2 },
-            tdDivisor: { value: TD_DIVISOR },
+            tdMultiplier: { value: TD_MULTIPLIER },
             isColorMappingMode: { value: heightMode === HeightMode.COLOR_MAPPING }
           },
           vertexShader: `
             uniform sampler2D heightMap;
             uniform float baseHeight;
-            uniform vec3 layerColors[6];
-            uniform float layerHeights[6];
+            uniform vec3 layerColors[15];
+            uniform float layerHeights[15];
             uniform bool isSteppedMode;
             uniform float layerHeight;
             uniform float baseThickness;
@@ -131,7 +131,7 @@ const HeightMap = React.forwardRef<HeightMapRef, {
               float minDistance = 1000000.0;
               float closestHeight = 0.0;
               
-              for(int i = 0; i < 6; i++) {
+              for(int i = 0; i < 15; i++) {
                 vec3 layerColor = layerColors[i];
                 float distance = length(pixelColor - layerColor);
                 if(distance < minDistance) {
@@ -179,9 +179,9 @@ const HeightMap = React.forwardRef<HeightMapRef, {
             }
           `,
           fragmentShader: `
-            uniform vec3 layerColors[6];
-            uniform float layerHeights[6];
-            uniform float layerTDs[6];
+            uniform vec3 layerColors[15];
+            uniform float layerHeights[15];
+            uniform float layerTDs[15];
             uniform int numLayers;
             uniform float baseThickness;
             uniform float firstLayerHeight;
@@ -189,13 +189,23 @@ const HeightMap = React.forwardRef<HeightMapRef, {
             uniform float baseHeight;
             uniform bool isSteppedMode;
             uniform bool showTDMode;
-            uniform float tdDivisor;
+            uniform float tdMultiplier;
             uniform bool isColorMappingMode;
             varying float vLayerNumber;
             varying vec2 vUv;
             
-            vec3 interpolateColor(vec3 color1, vec3 color2, float factor) {
-              return mix(color1, color2, factor);
+            vec3 blendColors(vec3 topColor, vec3 bottomColor, float alpha) {
+              return mix(bottomColor, topColor, alpha);
+            }
+
+            vec3 applyColorLayers(vec3 topColor, vec3 bottomColor, float baseAlpha, int numLayers) {
+              vec3 result = bottomColor;
+              // Limita o número de iterações para evitar loops infinitos
+              for(int i = 0; i < 50; i++) {
+                if(i >= numLayers) break;
+                result = blendColors(topColor, result, baseAlpha);
+              }
+              return result;
             }
 
             void main() {
@@ -209,18 +219,25 @@ const HeightMap = React.forwardRef<HeightMapRef, {
               if (showTDMode) {
                 vec3 previousColor = layerColors[0];
                 
-                for(int i = 1; i < 6; i++) {
+                for(int i = 1; i < 15; i++) {
                   if(i < numLayers && normalizedLayer >= layerHeights[i-1]) {
-                    float td = layerTDs[i] / tdDivisor;
+                    float td = layerTDs[i] * tdMultiplier;
                     float layersForTransition = td / layerHeight;
                     float currentLayerInSection = (normalizedLayer - layerHeights[i-1]) * totalLayers;
-                    float progress = min(1.0, currentLayerInSection / layersForTransition);
-                    color = interpolateColor(previousColor, layerColors[i], progress);
+                    
+                    if (currentLayerInSection < layersForTransition) {
+                      float baseAlpha = min(1.0, max(0.01, 1.0 / td));
+                      int remainingLayers = int(currentLayerInSection) + 1;
+                      color = applyColorLayers(layerColors[i], previousColor, baseAlpha, remainingLayers);
+                    } else {
+                      color = layerColors[i];
+                    }
+                    
                     previousColor = layerColors[i];
                   }
                 }
               } else {
-                for(int i = 1; i < 6; i++) {
+                for(int i = 1; i < 15; i++) {
                   if(i < numLayers && normalizedLayer >= layerHeights[i-1]) {
                     color = layerColors[i];
                   }
@@ -244,7 +261,7 @@ const HeightMap = React.forwardRef<HeightMapRef, {
   useEffect(() => {
     if (materialRef.current) {
       try {
-        const MAX_COLORS = 6;
+        const MAX_COLORS = 15;
         const colors = Array(MAX_COLORS).fill(null).map(() => new THREE.Color(0x000000));
         const heights = Array(MAX_COLORS).fill(1.0);
         const tds = Array(MAX_COLORS).fill(0.0);
@@ -277,7 +294,7 @@ const HeightMap = React.forwardRef<HeightMapRef, {
         materialRef.current.uniforms.numLayers.value = Array.isArray(layers) ? layers.length : 0;
         materialRef.current.uniforms.baseThickness.value = baseThickness;
         materialRef.current.uniforms.firstLayerHeight.value = layerHeight * 2;
-        materialRef.current.uniforms.tdDivisor.value = TD_DIVISOR;
+        materialRef.current.uniforms.tdMultiplier.value = TD_MULTIPLIER;
         materialRef.current.uniforms.isColorMappingMode.value = heightMode === HeightMode.COLOR_MAPPING;
         materialRef.current.needsUpdate = true;
 

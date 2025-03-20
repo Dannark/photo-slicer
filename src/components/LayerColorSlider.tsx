@@ -2,7 +2,7 @@ import React, { useRef, useEffect, useState } from 'react';
 import { LayerConfig } from './HeightControls';
 import ColorPicker from './ColorPicker';
 import { PatternSelector } from './PatternSelector';
-import { TD_DIVISOR } from '../constants/config';
+import { TD_MULTIPLIER } from '../constants/config';
 
 interface LayerColorSliderProps {
   layers: LayerConfig[];
@@ -75,48 +75,106 @@ const LayerColorSlider: React.FC<LayerColorSliderProps> = ({
     return positions;
   };
 
-  // Função para calcular a cor intermediária
-  const interpolateColor = (color1: string, color2: string, factor: number): string => {
-    // Remove o # se existir
-    const c1 = color1.replace('#', '');
-    const c2 = color2.replace('#', '');
-    
-    // Converte hex para RGB
-    const r1 = parseInt(c1.substr(0, 2), 16);
-    const g1 = parseInt(c1.substr(2, 2), 16);
-    const b1 = parseInt(c1.substr(4, 2), 16);
-    
-    const r2 = parseInt(c2.substr(0, 2), 16);
-    const g2 = parseInt(c2.substr(2, 2), 16);
-    const b2 = parseInt(c2.substr(4, 2), 16);
-    
-    // Interpola cada componente
-    const r = Math.round(r1 + (r2 - r1) * factor);
-    const g = Math.round(g1 + (g2 - g1) * factor);
-    const b = Math.round(b1 + (b2 - b1) * factor);
-    
-    // Converte de volta para hex
-    return `#${(r << 16 | g << 8 | b).toString(16).padStart(6, '0')}`;
+  // Função para converter RGB para Hex
+  const rgbToHex = (r: number, g: number, b: number): string => {
+    const toHex = (n: number) => Math.round(n).toString(16).padStart(2, '0');
+    return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
   };
 
-  // Função para calcular a cor com base na posição e TD
-  const getColorAtPosition = (y: number, layers: LayerConfig[], totalHeight: number) => {
-    const normalizedY = y / totalHeight;
-    let previousColor = '#000000';
+  // Função para converter Hex para RGB
+  const hexToRgb = (hex: string): [number, number, number] => {
+    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return result ? [
+        parseInt(result[1], 16),
+        parseInt(result[2], 16),
+        parseInt(result[3], 16)
+    ] : [0, 0, 0];
+  };
+
+  // Função para misturar cores com alpha
+  const blendColors = (topColor: string, bottomColor: string, alpha: number): string => {
+    const [r1, g1, b1] = hexToRgb(topColor);
+    const [r2, g2, b2] = hexToRgb(bottomColor);
     
+    // Fórmula de composição alpha
+    const r = (alpha * r1 + (1 - alpha) * r2);
+    const g = (alpha * g1 + (1 - alpha) * g2);
+    const b = (alpha * b1 + (1 - alpha) * b2);
+    
+    return rgbToHex(r, g, b);
+  };
+
+  const getColorAtPosition = (y: number, layers: LayerConfig[], totalHeight: number) => {
+    if (layers.length === 0) return '#000000';
+
+    // Calcula em qual camada estamos
+    const currentLayer = Math.floor(y);
+    
+    // Encontra em qual seção de cor estamos
+    let accumulatedLayers = 0;
     for (let i = 0; i < layers.length; i++) {
-      const heightPercentage = layers[i].heightPercentage / 100;
-      if (normalizedY <= heightPercentage) {
-        // Se estiver no modo de transição suave
-        const td = layers[i].td / TD_DIVISOR; // Dividimos o TD para obter a distância real de transição
-        const layersForTransition = td / layerHeight;
-        const currentLayerInSection = (normalizedY - (i > 0 ? layers[i-1].heightPercentage / 100 : 0)) * (totalHeight / layerHeight);
-        const progress = Math.min(1, currentLayerInSection / layersForTransition);
+        const nextAccumulatedLayers = i < layers.length - 1 
+            ? Math.floor((layers[i].heightPercentage / 100) * totalLayers)
+            : totalLayers;
+            
+        if (currentLayer < nextAccumulatedLayers) {
+            const td = layers[i].td * TD_MULTIPLIER;
+            const transitionLayers = Math.max(1, Math.floor(td / layerHeight));
+            
+            // Calcula a posição relativa dentro desta seção de camadas
+            const layerInSection = currentLayer - accumulatedLayers;
+            
+            console.log(`Camada ${currentLayer}:`, {
+                secao: i,
+                cor: layers[i].color,
+                td,
+                transitionLayers,
+                layerInSection,
+                accumulatedLayers,
+                nextAccumulatedLayers
+            });
+            
+            // Se estiver dentro da área de transição
+            if (layerInSection < transitionLayers) {
+                // Calcula o alpha base usando o TD
+                // TD maior = alpha menor = mais transparente = transição mais suave
+                // Limitamos o alpha entre 0.01 e 1 para evitar valores extremos
+                const baseAlpha = Math.min(1, Math.max(0.01, 1 / td));
+                
+                // Função recursiva para aplicar a cor com transparência
+                const applyColorWithTransparency = (
+                    topColor: string, 
+                    bottomColor: string, 
+                    remainingLayers: number
+                ): string => {
+                    // Se não há mais camadas para aplicar, retorna a cor atual
+                    if (remainingLayers <= 0) return bottomColor;
+                    
+                    // Aplica uma camada da cor superior com a transparência baseada no TD
+                    const blendedColor = blendColors(topColor, bottomColor, baseAlpha);
+                    
+                    // Recursivamente aplica mais camadas
+                    return applyColorWithTransparency(topColor, blendedColor, remainingLayers - 1);
+                };
+                
+                const corAnterior = i > 0 ? layers[i-1].color : layers[0].color;
+                const corAtual = layers[i].color;
+                
+                // Aplica as camadas de cor recursivamente
+                const corResultante = applyColorWithTransparency(
+                    corAtual,
+                    corAnterior,
+                    layerInSection + 1 // +1 porque começamos do 0
+                );
+                return corResultante;
+            }
+            
+            return layers[i].color;
+        }
         
-        return interpolateColor(previousColor, layers[i].color, progress);
-      }
-      previousColor = layers[i].color;
+        accumulatedLayers = nextAccumulatedLayers;
     }
+    
     return layers[layers.length - 1].color;
   };
 
@@ -160,40 +218,48 @@ const LayerColorSlider: React.FC<LayerColorSliderProps> = ({
 
     // Reset das variáveis para a coluna direita
     currentY = SLIDER_START_Y;
-    accumulatedLayers = 0;
-
+    
     // Desenha o slider - Coluna Direita (visualização com TD)
     for (let i = 0; i < totalLayers; i++) {
-      const y = SLIDER_START_Y + (i * layerPixelHeight);
-      const currentColor = getColorAtPosition(i * layerHeight, layers, totalHeight);
-      
-      ctx.fillStyle = currentColor;
-      ctx.fillRect(RIGHT_COLUMN_X, y, COLUMN_WIDTH, layerPixelHeight);
-      
-      // Desenha a borda
-      ctx.strokeStyle = '#333';
-      ctx.lineWidth = 1;
-      ctx.strokeRect(RIGHT_COLUMN_X, y, COLUMN_WIDTH, layerPixelHeight);
+        const currentColor = getColorAtPosition(i, layers, totalHeight);
+        
+        ctx.fillStyle = currentColor;
+        ctx.fillRect(
+            RIGHT_COLUMN_X, 
+            SLIDER_START_Y + (i * layerPixelHeight), 
+            COLUMN_WIDTH, 
+            layerPixelHeight
+        );
     }
+    
+    // Desenha uma única borda ao redor da coluna direita
+    ctx.strokeStyle = '#333';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(RIGHT_COLUMN_X, SLIDER_START_Y, COLUMN_WIDTH, SLIDER_HEIGHT);
 
     // Desenha linhas tracejadas para cada camada
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
     ctx.lineWidth = 1;
     ctx.setLineDash([4, 4]);
+    
+    // Reset do padrão tracejado para cada linha
     for (let i = 0; i <= totalLayers; i++) {
-      const y = SLIDER_START_Y + (i * layerPixelHeight);
-      // Linha para coluna esquerda
-      ctx.beginPath();
-      ctx.moveTo(LEFT_COLUMN_X, y);
-      ctx.lineTo(LEFT_COLUMN_X + COLUMN_WIDTH, y);
-      ctx.stroke();
-      // Linha para coluna direita
-      ctx.beginPath();
-      ctx.moveTo(RIGHT_COLUMN_X, y);
-      ctx.lineTo(RIGHT_COLUMN_X + COLUMN_WIDTH, y);
-      ctx.stroke();
+        ctx.setLineDash([4, 4]); // Reset do padrão para cada linha
+        const y = SLIDER_START_Y + (i * layerPixelHeight);
+        
+        // Linha para coluna esquerda
+        ctx.beginPath();
+        ctx.moveTo(LEFT_COLUMN_X, y);
+        ctx.lineTo(LEFT_COLUMN_X + COLUMN_WIDTH, y);
+        ctx.stroke();
+        
+        // Linha para coluna direita
+        ctx.beginPath();
+        ctx.moveTo(RIGHT_COLUMN_X, y);
+        ctx.lineTo(RIGHT_COLUMN_X + COLUMN_WIDTH, y);
+        ctx.stroke();
     }
-    ctx.setLineDash([]);
+    ctx.setLineDash([]); // Restaura o padrão sólido
 
     // Reset das variáveis para os botões
     currentY = SLIDER_START_Y;
