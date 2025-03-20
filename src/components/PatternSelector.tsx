@@ -135,7 +135,7 @@ export const PatternSelector: React.FC<PatternSelectorProps> = ({
       {selectedPatternIndex === 3 && (
         <div className={styles.colorsControl}>
           <div className={styles.controlGroup}>
-            <label htmlFor="numColors" className={styles.label}>Número de Cores:</label>
+            <label htmlFor="numColors" className={styles.label}>Number of Colors:</label>
             <input
               type="number"
               id="numColors"
@@ -149,7 +149,7 @@ export const PatternSelector: React.FC<PatternSelectorProps> = ({
 
           <div className={styles.controlGroup}>
             <label htmlFor="similarityThreshold" className={styles.label}>
-              Limiar de Similaridade: {similarityThreshold.toFixed(2)}
+              Similarity Threshold: {similarityThreshold.toFixed(2)}
             </label>
             <input
               type="range"
@@ -165,7 +165,7 @@ export const PatternSelector: React.FC<PatternSelectorProps> = ({
 
           <div className={styles.controlGroup}>
             <label htmlFor="quantizeLevels" className={styles.label}>
-              Níveis de Quantização: {quantizeLevels}
+              Quantization Levels: {quantizeLevels}
             </label>
             <input
               type="range"
@@ -181,7 +181,7 @@ export const PatternSelector: React.FC<PatternSelectorProps> = ({
 
           <div className={styles.controlGroup}>
             <label htmlFor="rgbWeight" className={styles.label}>
-              Peso RGB: {rgbWeight.toFixed(2)}
+              RGB Weight: {rgbWeight.toFixed(2)}
             </label>
             <input
               type="range"
@@ -197,7 +197,7 @@ export const PatternSelector: React.FC<PatternSelectorProps> = ({
 
           <div className={styles.controlGroup}>
             <label htmlFor="hueWeight" className={styles.label}>
-              Peso do Matiz: {hueWeight}
+              Hue Weight: {hueWeight}
             </label>
             <input
               type="range"
@@ -213,7 +213,7 @@ export const PatternSelector: React.FC<PatternSelectorProps> = ({
 
           <div className={styles.controlGroup}>
             <label htmlFor="saturationWeight" className={styles.label}>
-              Peso da Saturação: {saturationWeight}
+              Saturation Weight: {saturationWeight}
             </label>
             <input
               type="range"
@@ -229,7 +229,7 @@ export const PatternSelector: React.FC<PatternSelectorProps> = ({
 
           <div className={styles.controlGroup}>
             <label htmlFor="lightnessWeight" className={styles.label}>
-              Peso da Luminosidade: {lightnessWeight}
+              Lightness Weight: {lightnessWeight}
             </label>
             <input
               type="range"
