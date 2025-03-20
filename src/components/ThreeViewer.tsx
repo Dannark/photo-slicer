@@ -348,7 +348,7 @@ const HeightMap = React.forwardRef<HeightMapRef, {
           pixels[pixelIndex + 1],
           pixels[pixelIndex + 2]
         ];
-        height = calculateColorBasedHeight(pixelColor, layers) * baseHeight;
+        height = (calculateColorBasedHeight(pixelColor, layers) / 100) * baseHeight;
       } else {
         // Modo luminância padrão
         height = (pixels[pixelIndex] + pixels[pixelIndex + 1] + pixels[pixelIndex + 2]) / (3 * 255) * baseHeight;
