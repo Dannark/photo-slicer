@@ -23,5 +23,5 @@ export enum HeightMode {
 
 export interface HeightModeConfig {
   mode: HeightMode;
-  layers?: LayerConfig[];
+  label: string;
 }

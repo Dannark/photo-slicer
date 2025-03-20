@@ -1,19 +1,20 @@
 import React from 'react';
-import { HeightMode, HeightModeConfig } from '../patterns/types/types';
+import { HeightMode } from '../patterns/types/types';
 import styles from './HeightModeSelector.module.css';
 
 interface HeightModeSelectorProps {
   currentMode: HeightMode;
-  onModeChange: (config: HeightModeConfig) => void;
+  onModeChange: (mode: HeightMode) => void;
 }
 
 export const HeightModeSelector: React.FC<HeightModeSelectorProps> = ({
   currentMode,
   onModeChange
 }) => {
-  const handleModeChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    const newMode = event.target.value as HeightMode;
-    onModeChange({ mode: newMode });
+  const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newMode = e.target.value as HeightMode;
+    console.log('HeightModeSelector - mudando para:', newMode);
+    onModeChange(newMode);
   };
 
   return (
@@ -22,10 +23,10 @@ export const HeightModeSelector: React.FC<HeightModeSelectorProps> = ({
       <select
         id="heightMode"
         value={currentMode}
-        onChange={handleModeChange}
+        onChange={handleChange}
         className={styles.select}
       >
-        <option value={HeightMode.LUMINANCE}>Luminance (Default)</option>
+        <option value={HeightMode.LUMINANCE}>Luminance</option>
         <option value={HeightMode.COLOR_MAPPING}>Color Mapping</option>
       </select>
     </div>

@@ -70,7 +70,10 @@ const HeightControls: React.FC<HeightControlsProps> = ({
     <div className="height-controls">
       <div className="controls-group">
         <div className="control-item">
-          <label>Layer Height (mm):</label>
+          <div className="control-item-left">
+            <label>Layer Height (mm):</label>
+            <span>Minimum height: 0.04mm</span>
+          </div>
           <input
             type="number"
             min="0.04"
@@ -78,22 +81,27 @@ const HeightControls: React.FC<HeightControlsProps> = ({
             value={layerHeight}
             onChange={(e) => handleLayerHeightChange(Number(e.target.value))}
           />
-          <span>Minimum height: 0.04mm</span>
         </div>
 
         <div className="control-item">
-          <label>First Layer (mm):</label>
+          <div className="control-item-left">
+            <label>First Layer (mm):</label>
+            <span>Always 2x layer height</span>
+          </div>
           <input
             type="number"
             value={firstLayerHeight}
             disabled
             className="disabled-input"
           />
-          <span>Always 2x layer height</span>
         </div>
 
         <div className="control-item">
-          <label>Base Layers:</label>
+          <div className="control-item-left">
+            <label>Base Layers:</label>
+            <span>Height: {roundToTwoDecimals(baseLayers * layerHeight)}mm</span>
+          </div>
+
           <input
             type="number"
             min="0"
@@ -101,11 +109,13 @@ const HeightControls: React.FC<HeightControlsProps> = ({
             value={baseLayers}
             onChange={(e) => handleBaseLayersChange(Number(e.target.value))}
           />
-          <span>Height: {roundToTwoDecimals(baseLayers * layerHeight)}mm</span>
         </div>
 
         <div className="control-item">
-          <label>Number of Layers:</label>
+          <div className="control-item-left">
+            <label>Number of Layers:</label>
+            <span>Total Height: {totalHeight}mm</span>
+          </div>
           <input
             type="number"
             min="1"
@@ -113,13 +123,15 @@ const HeightControls: React.FC<HeightControlsProps> = ({
             value={numLayers}
             onChange={(e) => handleNumLayersChange(Number(e.target.value))}
           />
-          <span>Total Height: {totalHeight}mm</span>
         </div>
       </div>
       
       <div className="controls-group">
         <div className="control-item">
-          <label>Mesh Resolution:</label>
+          <div className="control-item-left">
+            <label>Mesh Resolution:</label>
+            <span>{resolution} vertices</span>
+          </div>
           <div className="resolution-slider-container">
             <input
               type="range"
@@ -129,10 +141,10 @@ const HeightControls: React.FC<HeightControlsProps> = ({
               value={resolution}
               onChange={(e) => onResolutionChange(Number(e.target.value))}
             />
-            <span>{resolution} vertices</span>
           </div>
-          <span>Higher values mean more detail (50-800)</span>
+         
         </div>
+        
       </div>
     </div>
   );

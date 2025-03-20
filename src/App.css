@@ -88,31 +88,39 @@
 }
 
 .layer-color-slider {
-  background: #1a1e23;
-  border-radius: 8px;
-  padding: 15px;
-  margin-top: 15px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+  /* background: transparent; */
+  /* border-radius: 8px; */
+  /* padding: 15px; */
+  /* margin-top: 15px; */
+  /* display: flex; */
+  /* flex-direction: column; */
+  /* gap: 10px; */
 }
 
 .layer-color-slider canvas {
-  border-radius: 4px;
+  border-radius: 40px;
   cursor: pointer;
 }
 
 .controls-group {
   background-color: #1a1e23;
   border-radius: 8px;
-  padding: 15px;
 }
 
 .control-item {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  flex: 1;
   gap: 8px;
   margin-bottom: 15px;
+}
+
+.control-item-left {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: 8px;
+  text-align: left;
 }
 
 .control-item:last-child {
@@ -126,7 +134,7 @@
 }
 
 .control-item input[type="number"] {
-  width: 100%;
+  width: 80px;
   padding: 8px 12px;
   border-radius: 4px;
   border: 1px solid #3a3e43;
@@ -155,6 +163,7 @@
 
 .resolution-slider-container {
   display: flex;
+  flex: 0;
   align-items: center;
   gap: 10px;
   width: 100%;
@@ -162,7 +171,6 @@
 }
 
 .resolution-slider-container input[type="range"] {
-  flex: 1;
   height: 4px;
   -webkit-appearance: none;
   background: #3a3e43;

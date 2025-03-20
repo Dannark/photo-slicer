@@ -1,12 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './App.css';
 import ImageUploader from './components/ImageUploader';
 import ThreeViewer from './components/ThreeViewer';
 import HeightControls, { LayerConfig } from './components/HeightControls';
 import LayerColorSlider from './components/LayerColorSlider';
 import Version from './components/Version';
-import { HeightMode, HeightModeConfig } from './patterns/types/types';
+import { HeightMode } from './patterns/types/types';
 import { HeightModeSelector } from './components/HeightModeSelector';
+import { PatternSelector } from './components/PatternSelector';
 
 const DEFAULT_LAYER_HEIGHT = 0.08; // mm por camada
 const DEFAULT_BASE_LAYERS = 2; // Começa com 2 camadas base
@@ -51,12 +52,15 @@ function App() {
   };
 
   const handleLayersChange = (newLayers: LayerConfig[]) => {
-    console.log('App - Layers atualizados:', newLayers);
     setLayers(newLayers);
   };
 
-  const handleHeightModeChange = (config: HeightModeConfig) => {
-    setHeightMode(config.mode);
+  const handleHeightModeChange = (mode: HeightMode) => {
+    setHeightMode(mode);
+  };
+
+  const handlePatternSelect = (newLayers: LayerConfig[]) => {
+    setLayers(newLayers);
   };
 
   return (
@@ -94,7 +98,15 @@ function App() {
               />
               <HeightModeSelector
                 currentMode={heightMode}
-                onModeChange={handleHeightModeChange}
+                onModeChange={(mode) => {
+                  handleHeightModeChange(mode);
+                }}
+              />
+              <PatternSelector
+                onSelectPattern={handlePatternSelect}
+                imageData={imageData}
+                maxHeight={totalHeight}
+                onHeightModeChange={handleHeightModeChange}
               />
               <LayerColorSlider
                 layers={layers}

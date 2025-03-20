@@ -124,16 +124,6 @@ const LayerColorSlider: React.FC<LayerColorSliderProps> = ({
             // Calcula a posição relativa dentro desta seção de camadas
             const layerInSection = currentLayer - accumulatedLayers;
             
-            console.log(`Camada ${currentLayer}:`, {
-                secao: i,
-                cor: layers[i].color,
-                td,
-                transitionLayers,
-                layerInSection,
-                accumulatedLayers,
-                nextAccumulatedLayers
-            });
-            
             // Se estiver dentro da área de transição
             if (layerInSection < transitionLayers) {
                 // Calcula o alpha base usando o TD
@@ -189,7 +179,7 @@ const LayerColorSlider: React.FC<LayerColorSliderProps> = ({
     ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
     // Desenha o fundo
-    ctx.fillStyle = '#1a1a1a';
+    ctx.fillStyle = 'transparent';
     ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
     // Desenha o slider - Coluna Esquerda (visualização original)
@@ -621,7 +611,7 @@ const LayerColorSlider: React.FC<LayerColorSliderProps> = ({
 
   return (
     <div ref={containerRef} className="layer-color-slider">
-      <PatternSelector onSelectPattern={handlePatternSelect} imageData={imageData} />
+      {/* <PatternSelector onSelectPattern={handlePatternSelect} imageData={imageData} /> */}
       <canvas
         ref={canvasRef}
         onMouseMove={handleMouseMove}

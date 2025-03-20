@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { patterns } from '../patterns';
-import { LayerConfig } from '../patterns/types/types';
+import { LayerConfig, HeightMode } from '../patterns/types/types';
 import { DominantColorsPattern } from '../patterns/algorithms/dominantColors';
 import styles from './PatternSelector.module.css';
 
@@ -8,12 +8,14 @@ interface PatternSelectorProps {
   onSelectPattern: (layers: LayerConfig[]) => void;
   imageData?: ImageData;
   maxHeight?: number;
+  onHeightModeChange?: (mode: HeightMode) => void;
 }
 
 export const PatternSelector: React.FC<PatternSelectorProps> = ({ 
   onSelectPattern,
   imageData,
-  maxHeight = 100
+  maxHeight = 100,
+  onHeightModeChange
 }) => {
   const [selectedPatternIndex, setSelectedPatternIndex] = useState(0);
   const [numColors, setNumColors] = useState(5);
@@ -28,7 +30,16 @@ export const PatternSelector: React.FC<PatternSelectorProps> = ({
         pattern = new DominantColorsPattern(numColors);
       }
       const layers = await pattern.execute(imageData, maxHeight);
-      onSelectPattern(layers);
+      onSelectPattern(layers);  
+    }
+
+    if(onHeightModeChange){
+      if (index <= 2) {
+        onHeightModeChange(HeightMode.LUMINANCE);
+      }
+      else if (index === 3 && onHeightModeChange) {
+        onHeightModeChange(HeightMode.COLOR_MAPPING);
+      }
     }
   };
 
