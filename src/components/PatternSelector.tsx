@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { patterns } from '../patterns';
 import { LayerConfig, HeightMode } from '../patterns/types/types';
 import { DominantColorsPattern } from '../patterns/algorithms/dominantColors';
@@ -10,6 +10,34 @@ interface PatternSelectorProps {
   maxHeight?: number;
   onHeightModeChange?: (mode: HeightMode) => void;
 }
+
+// Função auxiliar para redimensionar ImageData
+const resizeImageData = (imageData: ImageData, maxDimension: number = 800): ImageData => {
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  if (!ctx) throw new Error('Could not get canvas context');
+
+  // Calcula as novas dimensões mantendo a proporção
+  const ratio = Math.min(maxDimension / imageData.width, maxDimension / imageData.height);
+  const newWidth = Math.round(imageData.width * ratio);
+  const newHeight = Math.round(imageData.height * ratio);
+
+  // Cria um canvas temporário com a imagem original
+  const tempCanvas = document.createElement('canvas');
+  const tempCtx = tempCanvas.getContext('2d');
+  if (!tempCtx) throw new Error('Could not get temporary canvas context');
+  
+  tempCanvas.width = imageData.width;
+  tempCanvas.height = imageData.height;
+  tempCtx.putImageData(imageData, 0, 0);
+
+  // Redimensiona para o novo canvas
+  canvas.width = newWidth;
+  canvas.height = newHeight;
+  ctx.drawImage(tempCanvas, 0, 0, newWidth, newHeight);
+
+  return ctx.getImageData(0, 0, newWidth, newHeight);
+};
 
 export const PatternSelector: React.FC<PatternSelectorProps> = ({ 
   onSelectPattern,
@@ -26,6 +54,14 @@ export const PatternSelector: React.FC<PatternSelectorProps> = ({
   const [hueWeight, setHueWeight] = useState(15);
   const [saturationWeight, setSaturationWeight] = useState(5);
   const [lightnessWeight, setLightnessWeight] = useState(4);
+  const [isAdjusting, setIsAdjusting] = useState(false);
+
+  // Cria uma versão redimensionada da imagem para análise de cores
+  const resizedImageData = useMemo(() => {
+    if (!imageData) return null;
+    if (imageData.width <= 800 && imageData.height <= 800) return imageData;
+    return resizeImageData(imageData);
+  }, [imageData]);
 
   const handlePatternChange = async (event: React.ChangeEvent<HTMLSelectElement>) => {
     const index = parseInt(event.target.value);
@@ -72,8 +108,9 @@ export const PatternSelector: React.FC<PatternSelectorProps> = ({
         saturationWeight,
         lightnessWeight
       });
-      const layers = await pattern.execute(imageData, maxHeight);
-      onSelectPattern(layers);
+      // Usa a imagem redimensionada para preview
+      const previewLayers = await pattern.execute(resizedImageData || imageData, maxHeight);
+      onSelectPattern(previewLayers);
     }
   };
 
@@ -114,10 +151,35 @@ export const PatternSelector: React.FC<PatternSelectorProps> = ({
         saturationWeight: param === 'saturationWeight' ? value : saturationWeight,
         lightnessWeight: param === 'lightnessWeight' ? value : lightnessWeight
       });
-      const layers = await pattern.execute(imageData, maxHeight);
-      onSelectPattern(layers);
+      // Usa a imagem redimensionada durante o ajuste
+      const previewLayers = await pattern.execute(resizedImageData || imageData, maxHeight);
+      onSelectPattern(previewLayers);
     }
   };
+
+  // Função para aplicar as configurações na imagem original
+  const applyToOriginalImage = async () => {
+    if (!imageData || selectedPatternIndex !== 3) return;
+
+    const pattern = new DominantColorsPattern(numColors, {
+      similarityThreshold,
+      quantizeLevels,
+      rgbWeight,
+      hslWeight,
+      hueWeight,
+      saturationWeight,
+      lightnessWeight
+    });
+    const layers = await pattern.execute(imageData, maxHeight);
+    onSelectPattern(layers);
+  };
+
+  // Aplica as configurações na imagem original quando o usuário para de ajustar
+  useEffect(() => {
+    if (!isAdjusting) {
+      applyToOriginalImage();
+    }
+  }, [isAdjusting]);
 
   return (
     <div className={styles.container}>
@@ -135,7 +197,7 @@ export const PatternSelector: React.FC<PatternSelectorProps> = ({
       {selectedPatternIndex === 3 && (
         <div className={styles.colorsControl}>
           <div className={styles.controlGroup}>
-            <label htmlFor="numColors" className={styles.label}>Number of Colors:</label>
+            <label htmlFor="numColors" className={styles.label}>Número de Cores:</label>
             <input
               type="number"
               id="numColors"
@@ -149,7 +211,7 @@ export const PatternSelector: React.FC<PatternSelectorProps> = ({
 
           <div className={styles.controlGroup}>
             <label htmlFor="similarityThreshold" className={styles.label}>
-              Similarity Threshold: {similarityThreshold.toFixed(2)}
+              Limiar de Similaridade: {similarityThreshold.toFixed(2)}
             </label>
             <input
               type="range"
@@ -158,6 +220,10 @@ export const PatternSelector: React.FC<PatternSelectorProps> = ({
               max="0.3"
               step="0.01"
               value={similarityThreshold}
+              onMouseDown={() => setIsAdjusting(true)}
+              onMouseUp={() => setIsAdjusting(false)}
+              onTouchStart={() => setIsAdjusting(true)}
+              onTouchEnd={() => setIsAdjusting(false)}
               onChange={(e) => handleParameterChange('similarityThreshold', parseFloat(e.target.value))}
               className={styles.slider}
             />
@@ -165,7 +231,7 @@ export const PatternSelector: React.FC<PatternSelectorProps> = ({
 
           <div className={styles.controlGroup}>
             <label htmlFor="quantizeLevels" className={styles.label}>
-              Quantization Levels: {quantizeLevels}
+              Níveis de Quantização: {quantizeLevels}
             </label>
             <input
               type="range"
@@ -174,6 +240,10 @@ export const PatternSelector: React.FC<PatternSelectorProps> = ({
               max="128"
               step="8"
               value={quantizeLevels}
+              onMouseDown={() => setIsAdjusting(true)}
+              onMouseUp={() => setIsAdjusting(false)}
+              onTouchStart={() => setIsAdjusting(true)}
+              onTouchEnd={() => setIsAdjusting(false)}
               onChange={(e) => handleParameterChange('quantizeLevels', parseInt(e.target.value))}
               className={styles.slider}
             />
@@ -181,7 +251,7 @@ export const PatternSelector: React.FC<PatternSelectorProps> = ({
 
           <div className={styles.controlGroup}>
             <label htmlFor="rgbWeight" className={styles.label}>
-              RGB Weight: {rgbWeight.toFixed(2)}
+              Peso RGB: {rgbWeight.toFixed(2)}
             </label>
             <input
               type="range"
@@ -190,6 +260,10 @@ export const PatternSelector: React.FC<PatternSelectorProps> = ({
               max="1"
               step="0.1"
               value={rgbWeight}
+              onMouseDown={() => setIsAdjusting(true)}
+              onMouseUp={() => setIsAdjusting(false)}
+              onTouchStart={() => setIsAdjusting(true)}
+              onTouchEnd={() => setIsAdjusting(false)}
               onChange={(e) => handleParameterChange('rgbWeight', parseFloat(e.target.value))}
               className={styles.slider}
             />
@@ -197,7 +271,7 @@ export const PatternSelector: React.FC<PatternSelectorProps> = ({
 
           <div className={styles.controlGroup}>
             <label htmlFor="hueWeight" className={styles.label}>
-              Hue Weight: {hueWeight}
+              Peso do Matiz: {hueWeight}
             </label>
             <input
               type="range"
@@ -206,6 +280,10 @@ export const PatternSelector: React.FC<PatternSelectorProps> = ({
               max="25"
               step="1"
               value={hueWeight}
+              onMouseDown={() => setIsAdjusting(true)}
+              onMouseUp={() => setIsAdjusting(false)}
+              onTouchStart={() => setIsAdjusting(true)}
+              onTouchEnd={() => setIsAdjusting(false)}
               onChange={(e) => handleParameterChange('hueWeight', parseInt(e.target.value))}
               className={styles.slider}
             />
@@ -213,7 +291,7 @@ export const PatternSelector: React.FC<PatternSelectorProps> = ({
 
           <div className={styles.controlGroup}>
             <label htmlFor="saturationWeight" className={styles.label}>
-              Saturation Weight: {saturationWeight}
+              Peso da Saturação: {saturationWeight}
             </label>
             <input
               type="range"
@@ -222,6 +300,10 @@ export const PatternSelector: React.FC<PatternSelectorProps> = ({
               max="10"
               step="1"
               value={saturationWeight}
+              onMouseDown={() => setIsAdjusting(true)}
+              onMouseUp={() => setIsAdjusting(false)}
+              onTouchStart={() => setIsAdjusting(true)}
+              onTouchEnd={() => setIsAdjusting(false)}
               onChange={(e) => handleParameterChange('saturationWeight', parseInt(e.target.value))}
               className={styles.slider}
             />
@@ -229,7 +311,7 @@ export const PatternSelector: React.FC<PatternSelectorProps> = ({
 
           <div className={styles.controlGroup}>
             <label htmlFor="lightnessWeight" className={styles.label}>
-              Lightness Weight: {lightnessWeight}
+              Peso da Luminosidade: {lightnessWeight}
             </label>
             <input
               type="range"
@@ -238,6 +320,10 @@ export const PatternSelector: React.FC<PatternSelectorProps> = ({
               max="10"
               step="1"
               value={lightnessWeight}
+              onMouseDown={() => setIsAdjusting(true)}
+              onMouseUp={() => setIsAdjusting(false)}
+              onTouchStart={() => setIsAdjusting(true)}
+              onTouchEnd={() => setIsAdjusting(false)}
               onChange={(e) => handleParameterChange('lightnessWeight', parseInt(e.target.value))}
               className={styles.slider}
             />
